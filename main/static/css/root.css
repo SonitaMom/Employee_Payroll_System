@@ -1,0 +1,551 @@
+:root {
+    --dark-navy: #172033;
+    /* Sidebar BG & dark header elements */
+    --sidebar-bg: #172033;
+    --primary-blue: #0066FF;
+    /* Main buttons, active sidebar links, chart highlights */
+    --accent-bright-blue: #00B0FF;
+    /* Secondary charts, hover states, lighter blue fills */
+    --main-app-bg: #F4F6F9;
+    /* Screen and dashboard backgrounds */
+    --card-bg: #FFFFFF;
+    /* Clean white background for tables, cards, modals */
+    --primary-text: #1E293B;
+    /* Main headings, table headers, primary text */
+    --muted-text: #64748B;
+    /* Subtitles, breadcrumbs, placeholder text */
+    --border-color: #E2E8F0;
+    /* Table rows, card borders, input outlines */
+    --success-green: #10B981;
+    /* Badges for Active, Paid, Present, positive metrics */
+    --warning-orange: #F59E0B;
+    /* Badges for Pending, attention-needed */
+    --error-red: #EF4444;
+    /* Delete buttons, alert icons, Absent status */
+    --purple-metric: #8B5CF6;
+    /* Specific metric summary cards (e.g., payroll) */
+
+    --font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --sidebar-width: 250px;
+    --sidebar-collapsed-width: 0px;
+    --header-height: 70px;
+    --transition-speed: 0.3s;
+    --border-radius-sm: 8px;
+    --border-radius-md: 12px;
+    --border-radius-lg: 16px;
+    --box-shadow-card: 0 1px 3px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.03);
+    --box-shadow-hover: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -1px rgba(0, 0, 0, 0.04);
+}
+
+/* ==========================================================================
+   Base & Reset
+   ========================================================================== */
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+body {
+    font-family: var(--font-family);
+    background-color: var(--main-app-bg);
+    color: var(--primary-text);
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    overflow-x: hidden;
+}
+
+a {
+    text-decoration: none;
+    color: inherit;
+}
+
+/* ==========================================================================
+   App Layout (Sidebar + Main Area)
+   ========================================================================== */
+.app-wrapper {
+    display: flex;
+    min-height: 100vh;
+    width: 100%;
+}
+
+/* Sidebar Styles */
+.app-sidebar {
+    width: var(--sidebar-width);
+    min-width: var(--sidebar-width);
+    background-color: var(--dark-navy);
+    color: #ffffff;
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 1040;
+    transition: transform var(--transition-speed) ease, width var(--transition-speed) ease;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+/* Custom Scrollbar for Sidebar */
+.app-sidebar::-webkit-scrollbar {
+    width: 5px;
+}
+
+.app-sidebar::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 4px;
+}
+
+/* Brand / Logo */
+.sidebar-brand {
+    height: var(--header-height);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 0 24px;
+    color: #ffffff;
+    font-size: 1.25rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.brand-icon {
+    width: 36px;
+    height: 36px;
+    background: linear-gradient(135deg, var(--primary-blue), var(--accent-bright-blue));
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #ffffff;
+    font-size: 1.15rem;
+    box-shadow: 0 4px 10px rgba(0, 102, 255, 0.35);
+}
+
+/* Navigation Menu */
+.sidebar-menu {
+    list-style: none;
+    padding: 16px 12px;
+    margin: 0;
+    flex-grow: 1;
+}
+
+.menu-section-label {
+    font-size: 0.72rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #818cf8;
+    padding: 16px 12px 6px 12px;
+    opacity: 0.8;
+}
+
+.nav-item {
+    margin-bottom: 4px;
+}
+
+.nav-link-custom {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 11px 16px;
+    border-radius: 10px;
+    color: #94a3b8;
+    font-size: 0.92rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.nav-link-custom i,
+.nav-link-custom svg {
+    font-size: 1.1rem;
+    transition: transform 0.2s ease;
+    flex-shrink: 0;
+}
+
+.nav-link-custom:hover {
+    color: #ffffff;
+    background-color: rgba(255, 255, 255, 0.06);
+}
+
+.nav-link-custom:hover i {
+    transform: translateX(2px);
+}
+
+/* Active Nav State - As shown in screenshot */
+.nav-link-custom.active {
+    background-color: var(--primary-blue);
+    color: #ffffff;
+    font-weight: 600;
+    box-shadow: 0 4px 14px rgba(0, 102, 255, 0.4);
+}
+
+.nav-link-custom.active i {
+    color: #ffffff;
+}
+
+/* Sidebar Footer (Logout) */
+.sidebar-footer {
+    padding: 12px;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.nav-link-logout {
+    color: #f87171 !important;
+}
+
+.nav-link-logout:hover {
+    background-color: rgba(239, 68, 68, 0.12) !important;
+    color: #ef4444 !important;
+}
+
+/* Main Content Area */
+.app-main {
+    margin-left: var(--sidebar-width);
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    width: calc(100% - var(--sidebar-width));
+    transition: margin-left var(--transition-speed) ease, width var(--transition-speed) ease;
+}
+
+/* Collapsed Sidebar on Desktop */
+body.sidebar-collapsed .app-sidebar {
+    transform: translateX(-100%);
+}
+
+body.sidebar-collapsed .app-main {
+    margin-left: 0;
+    width: 100%;
+}
+
+/* ==========================================================================
+   Header / Topbar
+   ========================================================================== */
+.app-header {
+    height: var(--header-height);
+    background-color: var(--card-bg);
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 28px;
+    position: sticky;
+    top: 0;
+    z-index: 1020;
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex: 1;
+    max-width: 480px;
+}
+
+.btn-sidebar-toggle {
+    background: transparent;
+    border: none;
+    color: var(--primary-text);
+    font-size: 1.25rem;
+    padding: 8px;
+    border-radius: var(--border-radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.btn-sidebar-toggle:hover {
+    background-color: var(--main-app-bg);
+}
+
+/* Topbar Global Search */
+.header-search-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+.header-search-wrapper i {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--muted-text);
+    font-size: 0.95rem;
+}
+
+.header-search-input {
+    width: 100%;
+    height: 42px;
+    padding: 8px 14px 8px 38px;
+    background-color: var(--main-app-bg);
+    border: 1px solid transparent;
+    border-radius: 10px;
+    font-size: 0.9rem;
+    color: var(--primary-text);
+    outline: none;
+    transition: all 0.2s ease;
+}
+
+.header-search-input:focus {
+    border-color: var(--primary-blue);
+    background-color: #ffffff;
+    box-shadow: 0 0 0 3px rgba(0, 102, 255, 0.15);
+}
+
+.header-search-input::placeholder {
+    color: var(--muted-text);
+    opacity: 0.8;
+}
+
+/* Header Right - Notification & Profile */
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+}
+
+.header-action-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    background-color: var(--main-app-bg);
+    border: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--muted-text);
+    position: relative;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.header-action-btn:hover {
+    color: var(--primary-blue);
+    border-color: var(--primary-blue);
+    background-color: #ffffff;
+}
+
+.notification-badge {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 8px;
+    height: 8px;
+    background-color: var(--error-red);
+    border-radius: 50%;
+    border: 2px solid #ffffff;
+}
+
+.user-profile-menu {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 10px;
+    transition: background-color 0.2s;
+}
+
+.user-profile-menu:hover {
+    background-color: var(--main-app-bg);
+}
+
+.user-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    object-fit: cover;
+    border: 2px solid #ffffff;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.user-info {
+    display: flex;
+    flex-direction: column;
+    text-align: left;
+}
+
+.user-name {
+    font-size: 0.92rem;
+    font-weight: 600;
+    color: var(--primary-text);
+    line-height: 1.2;
+}
+
+.user-role {
+    font-size: 0.78rem;
+    color: var(--muted-text);
+}
+
+/* ==========================================================================
+   Body Content Container
+   ========================================================================== */
+.content-body {
+    padding: 28px;
+    flex-grow: 1;
+}
+
+/* Overlay for Mobile Sidebar */
+.sidebar-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(15, 23, 42, 0.5);
+    backdrop-filter: blur(2px);
+    z-index: 1030;
+    opacity: 0;
+    transition: opacity var(--transition-speed) ease;
+}
+
+/* ==========================================================================
+   Common Card & Badge Component Utilities
+   ========================================================================== */
+.card-custom {
+    background-color: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-md);
+    box-shadow: var(--box-shadow-card);
+    transition: box-shadow 0.2s ease;
+}
+
+.card-custom:hover {
+    box-shadow: var(--box-shadow-hover);
+}
+
+/* Custom Status Badges */
+.badge-status {
+    padding: 4px 10px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    border-radius: 6px;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.badge-status-active,
+.badge-status-paid,
+.badge-status-present {
+    background-color: rgba(16, 185, 129, 0.12);
+    color: var(--success-green);
+}
+
+.badge-status-pending,
+.badge-status-late {
+    background-color: rgba(245, 158, 11, 0.12);
+    color: var(--warning-orange);
+}
+
+.badge-status-absent,
+.badge-status-inactive {
+    background-color: rgba(239, 68, 68, 0.12);
+    color: var(--error-red);
+}
+
+/* Primary Button Styling */
+.btn-primary-custom {
+    background-color: var(--primary-blue);
+    border-color: var(--primary-blue);
+    color: #ffffff;
+    font-weight: 600;
+    border-radius: 8px;
+    padding: 8px 18px;
+    transition: all 0.2s ease;
+}
+
+.btn-primary-custom:hover {
+    background-color: #0052cc;
+    border-color: #0052cc;
+    color: #ffffff;
+    box-shadow: 0 4px 12px rgba(0, 102, 255, 0.3);
+}
+
+/* Metric / Stat Card Icons */
+.metric-icon-box {
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+}
+
+.metric-icon-blue {
+    background-color: rgba(0, 102, 255, 0.12);
+    color: var(--primary-blue);
+}
+
+.metric-icon-green {
+    background-color: rgba(16, 185, 129, 0.12);
+    color: var(--success-green);
+}
+
+.metric-icon-purple {
+    background-color: rgba(139, 92, 246, 0.12);
+    color: var(--purple-metric);
+}
+
+.metric-icon-orange {
+    background-color: rgba(245, 158, 11, 0.12);
+    color: var(--warning-orange);
+}
+
+/* ==========================================================================
+   Responsive Breakpoints
+   ========================================================================== */
+@media (max-width: 991.98px) {
+    .app-sidebar {
+        transform: translateX(-100%);
+    }
+
+    .app-sidebar.show {
+        transform: translateX(0);
+    }
+
+    .sidebar-overlay.show {
+        display: block;
+        opacity: 1;
+    }
+
+    .app-main {
+        margin-left: 0;
+        width: 100%;
+    }
+
+    .content-body {
+        padding: 18px;
+    }
+
+    .header-left {
+        max-width: 260px;
+    }
+}
+
+@media (max-width: 575.98px) {
+    .header-left {
+        max-width: 180px;
+    }
+
+    .header-search-input {
+        font-size: 0.82rem;
+    }
+
+    .user-info {
+        display: none;
+    }
+
+    .app-header {
+        padding: 0 16px;
+    }
+}
