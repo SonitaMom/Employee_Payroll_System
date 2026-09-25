@@ -1,0 +1,184 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {% block extra_meta %}
+    {% endblock %}
+    <title>{% block title %}Employee Payroll System{% endblock %}</title>
+
+    <!-- Google Font: Plus Jakarta Sans -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+    <!-- Bootstrap 5 CSS -->
+    <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">
+
+    <!-- Custom Design System CSS -->
+    <link rel="stylesheet" href="{% static 'css/root.css' %}">
+
+    {% block extra_css %}
+    {% endblock %}
+</head>
+
+<body>
+    <!-- Mobile Backdrop Overlay -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <div class="app-wrapper">
+        <!-- Sidebar Navigation -->
+        <aside class="app-sidebar" id="appSidebar">
+            <!-- Brand Logo -->
+            <div class="sidebar-brand">
+                <div class="brand-icon">
+                    <i class="bi bi-wallet2"></i>
+                </div>
+                <span>PayPro</span>
+            </div>
+
+            <!-- Navigation Links -->
+            <ul class="sidebar-menu">
+                <li class="nav-item">
+                    <a href="#" class="nav-link-custom {% block nav_dashboard %}active{% endblock %}">
+                        <i class="bi bi-grid-fill"></i>
+                        <span>Dashboard</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link-custom {% block nav_employees %}{% endblock %}">
+                        <i class="bi bi-people-fill"></i>
+                        <span>Employees</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link-custom {% block nav_departments %}{% endblock %}">
+                        <i class="bi bi-building"></i>
+                        <span>Departments</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link-custom {% block nav_positions %}{% endblock %}">
+                        <i class="bi bi-briefcase-fill"></i>
+                        <span>Positions</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link-custom {% block nav_attendance %}{% endblock %}">
+                        <i class="bi bi-clock-history"></i>
+                        <span>Attendance</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link-custom {% block nav_payroll %}{% endblock %}">
+                        <i class="bi bi-cash-stack"></i>
+                        <span>Payroll</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link-custom {% block nav_payments %}{% endblock %}">
+                        <i class="bi bi-credit-card-2-front-fill"></i>
+                        <span>Payments</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link-custom {% block nav_payslips %}{% endblock %}">
+                        <i class="bi bi-file-earmark-text-fill"></i>
+                        <span>Payslips</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link-custom {% block nav_reports %}{% endblock %}">
+                        <i class="bi bi-file-earmark-bar-graph-fill"></i>
+                        <span>Reports</span>
+                    </a>
+                </li>
+
+                <!-- Other / Settings -->
+                <li class="menu-section-label">Other</li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link-custom {% block nav_settings %}{% endblock %}">
+                        <i class="bi bi-gear-fill"></i>
+                        <span>Settings</span>
+                    </a>
+                </li>
+            </ul>
+
+            <!-- Sidebar Footer (Logout) -->
+            <div class="sidebar-footer">
+                <a href="#" class="nav-link-custom nav-link-logout">
+                    <i class="bi bi-box-arrow-left"></i>
+                    <span>Logout</span>
+                </a>
+            </div>
+        </aside>
+
+        <!-- Main Content Wrapper -->
+        <div class="app-main">
+            <!-- Header / Topbar -->
+            <header class="app-header">
+                <div class="header-left">
+                    <button class="btn-sidebar-toggle" id="sidebarToggle" type="button" aria-label="Toggle sidebar">
+                        <i class="bi bi-list"></i>
+                    </button>
+                    <div class="header-search-wrapper">
+                        <i class="bi bi-search"></i>
+                        <input type="text" class="header-search-input" placeholder="Search anything...">
+                    </div>
+                </div>
+
+                <div class="header-right">
+                    <!-- Notification Bell -->
+                    <button class="header-action-btn" type="button" aria-label="Notifications">
+                        <i class="bi bi-bell"></i>
+                        <span class="notification-badge"></span>
+                    </button>
+
+                    <!-- User Profile Dropdown -->
+                    <div class="dropdown">
+                        <div class="user-profile-menu dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false"
+                            role="button">
+                            <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80"
+                                alt="Admin" class="user-avatar">
+                            <div class="user-info">
+                                <span class="user-name">Admin</span>
+                                <span class="user-role">Administrator</span>
+                            </div>
+                        </div>
+                        <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 mt-2">
+                            <li><a class="dropdown-item py-2" href="#"><i class="bi bi-person me-2"></i>My
+                                    Profile</a></li>
+                            <li><a class="dropdown-item py-2" href="#"><i
+                                        class="bi bi-gear me-2"></i>Settings</a></li>
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
+                            <li><a class="dropdown-item py-2 text-danger" href="#"><i
+                                        class="bi bi-box-arrow-left me-2"></i>Logout</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Main Content Container -->
+            <main class="content-body">
+                {% block content %}
+                {% endblock %}
+            </main>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
+    <script src="{% static 'js/index.js' %}"></script>
+    {% block extra_js %}
+    {% endblock %}
+</body>
+
+</html>
