@@ -1,36 +1,110 @@
 {% load static %}
 <!DOCTYPE html>
-<html lang="en">
+<html lang="km">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login</title>
+    <title>PayPro - Employee Payroll & Payment Management System</title>
+
+    <!-- Bootstrap 5 CSS -->
     <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">
+
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+    <!-- Custom Theme & Login Styles -->
+    <link rel="stylesheet" href="{% static 'css/root.css' %}">
+    <link rel="stylesheet" href="{% static 'css/login.css' %}">
 </head>
 
 <body>
-    <div class="container py-4">
-        <h1 class="mb-3">Employee Payroll System</h1>
-        <form action="">
-            <div class="mb-3">
-                <label for="username" class="form-label">Username</label>
-                <input type="text" class="form-control" id="username">
+
+    <div class="viewport-wrapper container-fluid p-0">
+        <div class="row g-0">
+
+            <!-- Left Branding Panel (Desktop Only) -->
+            <div class="col-lg-6 brand-panel">
+                <div class="brand-header">
+                    <div class="brand-logo-box">
+                        <div class="brand-icon">
+                            <i class="bi bi-house-door-fill"></i>
+                        </div>
+                        <h1 class="brand-title">PayPro</h1>
+                    </div>
+                    <p class="brand-description">Employee Payroll & Payment Management System</p>
+                </div>
+
+                <div class="brand-footer">
+                    <h6>Manage People</h6>
+                    <p>Build a Better Tomorrow</p>
+                </div>
             </div>
-            <div class="mb-3">
-                <label for="password" class="form-label">Password</label>
-                <input type="password" class="form-control" id="password">
+
+            <!-- Right Form Panel -->
+            <div class="col-lg-6 form-panel">
+                <div class="auth-card">
+
+                    <!-- Logo លើ Mobile -->
+                    <div class="d-flex d-lg-none align-items-center gap-2 mb-4 justify-content-center">
+                        <div class="brand-icon brand-icon-mobile">
+                            <i class="bi bi-house-door-fill"></i>
+                        </div>
+                        <h2 class="brand-title brand-title-mobile">PayPro</h2>
+                    </div>
+
+                    <div class="auth-header mb-4">
+                        <h3>Welcome Back</h3>
+                        <p>Sign in to your account</p>
+                    </div>
+
+                    <!-- Django Dynamic Message Toast -->
+                    <div class="alert alert-danger alert-toast mb-3" id="alertToast" role="alert">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                        <span id="alertMessage">Username ឬ Password មិនត្រឹមត្រូវ!</span>
+                    </div>
+
+                    <!-- Login Form -->
+                    <form action="{% url 'login' %}" method="POST" id="loginForm" novalidate>
+                        <!-- {% csrf_token %} -->
+
+                        <!-- Username / Email Input -->
+                        <div class="custom-input-group">
+                            <i class="bi bi-person input-icon"></i>
+                            <input type="text" class="form-control" id="username" name="username"
+                                placeholder="Username or Email" required autocomplete="username">
+                        </div>
+
+                        <!-- Password Input -->
+                        <div class="custom-input-group">
+                            <i class="bi bi-lock input-icon"></i>
+                            <input type="password" class="form-control" id="password" name="password"
+                                placeholder="Password" required autocomplete="current-password">
+                            <button type="button" class="password-toggle-btn" id="togglePasswordBtn"
+                                aria-label="Toggle Password Visibility">
+                                <i class="bi bi-eye-slash" id="toggleIcon"></i>
+                            </button>
+                        </div>
+
+                        <!-- Submit Button -->
+                        <button type="submit" class="btn btn-submit mt-2" id="btnSubmit">
+                            <span id="btnText">Sign In</span>
+                            <div class="spinner-border spinner-border-sm text-light d-none" id="btnSpinner"
+                                role="status"></div>
+                        </button>
+                    </form>
+                    <a href="/dashboard/">Dashboard</a>
+                </div>
             </div>
-            <button type="submit" class="btn btn-primary">Login</button>
-        </form>
+
+        </div>
     </div>
 
 
-    <!-- testing purpose only -->
-    <a href="/dashboard/">Dashboard</a>
-    <!-- testing purpose only -->
 
+    <!-- Scripts -->
     <script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
+    <script src="{% static 'js/login.js' %}"></script>
 </body>
 
 </html>

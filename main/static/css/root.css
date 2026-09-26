@@ -1,3 +1,38 @@
+/* ==========================================================================
+   Local Inter Font Definitions
+   ========================================================================== */
+@font-face {
+    font-family: 'Inter';
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: url('../fonts/Inter-Regular.woff2') format('woff2');
+}
+
+@font-face {
+    font-family: 'Inter';
+    font-style: normal;
+    font-weight: 500;
+    font-display: swap;
+    src: url('../fonts/Inter-Medium.woff2') format('woff2');
+}
+
+@font-face {
+    font-family: 'Inter';
+    font-style: normal;
+    font-weight: 600;
+    font-display: swap;
+    src: url('../fonts/Inter-SemiBold.woff2') format('woff2');
+}
+
+@font-face {
+    font-family: 'Inter';
+    font-style: normal;
+    font-weight: 700;
+    font-display: swap;
+    src: url('../fonts/Inter-Bold.woff2') format('woff2');
+}
+
 :root {
     --dark-navy: #172033;
     /* Sidebar BG & dark header elements */
@@ -25,7 +60,7 @@
     --purple-metric: #8B5CF6;
     /* Specific metric summary cards (e.g., payroll) */
 
-    --font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     --sidebar-width: 250px;
     --sidebar-collapsed-width: 0px;
     --header-height: 70px;
@@ -104,7 +139,7 @@ a {
     display: flex;
     align-items: center;
     gap: 12px;
-    padding: 0 24px;
+    padding: 0 24px 0 24px;
     color: #ffffff;
     font-size: 1.25rem;
     font-weight: 700;
@@ -128,7 +163,7 @@ a {
 /* Navigation Menu */
 .sidebar-menu {
     list-style: none;
-    padding: 16px 12px;
+    padding: 12px 12px;
     margin: 0;
     flex-grow: 1;
 }
@@ -185,12 +220,6 @@ a {
 
 .nav-link-custom.active i {
     color: #ffffff;
-}
-
-/* Sidebar Footer (Logout) */
-.sidebar-footer {
-    padding: 12px;
-    border-top: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .nav-link-logout {
