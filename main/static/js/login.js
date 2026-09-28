@@ -12,18 +12,18 @@ document.addEventListener('DOMContentLoaded', function () {
         togglePasswordBtn.addEventListener('click', function () {
             const isPassword = passwordInput.getAttribute('type') === 'password';
             passwordInput.setAttribute('type', isPassword ? 'text' : 'password');
-            
+
             toggleIcon.classList.toggle('bi-eye', isPassword);
             toggleIcon.classList.toggle('bi-eye-slash', !isPassword);
         });
     }
 
     // 2. Form Loading State Feedback
-    if (loginForm) {
-        loginForm.addEventListener('submit', function (e) {
-            btnSubmit.disabled = true;
-            btnText.textContent = "Signing in...";
-            btnSpinner.classList.remove('d-none');
-        });
-    }
+    // if (loginForm) {
+    //     loginForm.addEventListener('submit', function (e) {
+    //         btnSubmit.disabled = true;
+    //         btnText.textContent = "Signing in...";
+    //         btnSpinner.classList.remove('d-none');
+    //     });
+    // }
 });

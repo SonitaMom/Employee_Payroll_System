@@ -1,0 +1,11 @@
+<h1>Employees</h1>
+
+{% for employee in employees %}
+<p>
+    {{ employee.employee_id }}
+    - {{ employee.first_name }}
+    {{ employee.last_name }}
+</p>
+{% empty %}
+<p>No employees found.</p>
+{% endfor %}
