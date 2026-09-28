@@ -8,7 +8,11 @@ from django.shortcuts import render, redirect
 from .models import Employee
 
 
+
 def home(request):
+    if request.user.is_authenticated:
+        return redirect("dashboard")
+
     return redirect("login")
 
 def login_view(request):
