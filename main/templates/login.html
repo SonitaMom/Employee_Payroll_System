@@ -59,20 +59,23 @@
                     </div>
 
                     <!-- Django Dynamic Message Toast -->
-                    <div class="alert alert-danger alert-toast mb-3" id="alertToast" role="alert">
+                    <!-- <div class="alert alert-danger alert-toast mb-3" id="alertToast" role="alert">
                         <i class="bi bi-exclamation-triangle-fill me-2"></i>
                         <span id="alertMessage">Username ឬ Password មិនត្រឹមត្រូវ!</span>
-                    </div>
+                    </div> -->
+
+
 
                     <!-- Login Form -->
-                    <form action="{% url 'login' %}" method="POST" id="loginForm" novalidate>
-                        <!-- {% csrf_token %} -->
+                    <!-- <form action="{% url 'login' %}" method="POST" id="loginForm"> -->
+                    <form method="POST" id="loginForm">
+                        {% csrf_token %}
 
                         <!-- Username / Email Input -->
                         <div class="custom-input-group">
                             <i class="bi bi-person input-icon"></i>
-                            <input type="text" class="form-control" id="username" name="username"
-                                placeholder="Username or Email" required autocomplete="username">
+                            <input type="text" class="form-control" id="username" name="username" placeholder="Username"
+                                required autocomplete="username">
                         </div>
 
                         <!-- Password Input -->
@@ -86,14 +89,17 @@
                             </button>
                         </div>
 
+                        {% if error %}
+                        <p>{{ error }}</p>
+                        {% endif %}
+
                         <!-- Submit Button -->
                         <button type="submit" class="btn btn-submit mt-2" id="btnSubmit">
-                            <span id="btnText">Sign In</span>
+                            <span id="btnText">Login</span>
                             <div class="spinner-border spinner-border-sm text-light d-none" id="btnSpinner"
                                 role="status"></div>
                         </button>
                     </form>
-                    <a href="/dashboard/">Dashboard</a>
                 </div>
             </div>
 
