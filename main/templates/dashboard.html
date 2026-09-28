@@ -3,4 +3,9 @@
 {% block title %}Dashboard - Employee Payroll System{% endblock %}
 
 {% block content %}
+<h1>Dashboard</h1>
+
+<p>Welcome, {{ user.username }}!</p>
+
+<a href="{% url 'logout' %}">Logout</a>
 {% endblock %}
