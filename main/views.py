@@ -44,7 +44,84 @@ def logout_view(request):
 
 @login_required
 def dashboard(request):
-    return render(request, "dashboard.html")
+    return render(request, "dashboard.html", {
+        "title": "Dashboard"
+    })
+
+
+
+
+@login_required
+@permission_required("main.view_employee", raise_exception=True)
+def employee_test(request):
+    return render(request, "employees/test.html", {
+        "title": "test"
+    })
+
+
+@login_required
+@permission_required("main.view_department", raise_exception=True)
+def department_test(request):
+    return render(request, "departments/test.html", {
+        "title": "test"
+    })
+
+
+@login_required
+@permission_required("main.view_position", raise_exception=True)
+def position_test(request):
+    return render(request, "positions/test.html", {
+        "title": "test"
+    })
+
+
+@login_required
+@permission_required("main.view_attendance", raise_exception=True)
+def attendance_test(request):
+    return render(request, "attendance/test.html", {
+        "title": "test"
+    })
+
+
+@login_required
+@permission_required("main.view_payroll", raise_exception=True)
+def payroll_test(request):
+    return render(request, "payroll/test.html", {
+        "title": "test"
+    })
+
+
+@login_required
+@permission_required("main.view_payment", raise_exception=True)
+def payments_test(request):
+    return render(request, "payments/test.html", {
+        "title": "test"
+    })
+
+
+@login_required
+@permission_required("main.view_payslip", raise_exception=True)
+def payslips_test(request):
+    return render(request, "payslips/test.html", {
+        "title": "test"
+    })
+
+
+@login_required
+@permission_required("main.view_report", raise_exception=True)
+def reports_test(request):
+    return render(request, "reports/test.html", {
+        "title": "test"
+    })
+
+
+@login_required
+@permission_required("main.view_setting", raise_exception=True)
+def settings_test(request):
+    return render(request, "settings/test.html", {
+        "title": "test"
+    })
+
 
 
 
