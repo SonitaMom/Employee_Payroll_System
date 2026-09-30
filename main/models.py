@@ -27,16 +27,21 @@ class Position(models.Model):
 
 
 class Employee(models.Model):
+    class SexChoices(models.TextChoices):
+        MALE = "Male", "Male"
+        FEMALE = "Female", "Female"
+
     class StatusChoices(models.TextChoices):
         ACTIVE = "Active", "Active"
         INACTIVE = "Inactive", "Inactive"
 
-    employee_id = models.CharField(
-        max_length=20, primary_key=True
-    )  # e.g. "EMP0001"
+    employee_id = models.AutoField(primary_key=True)
     first_name = models.CharField(max_length=100)
     last_name = models.CharField(max_length=100)
-    gender = models.CharField(max_length=20, blank=True, null=True)
+    sex = models.CharField(
+        max_length=6, choices=SexChoices.choices, blank=True, null=True
+    )
+    image = models.ImageField(upload_to="employees/", blank=True, null=True)
     date_of_birth = models.DateField(blank=True, null=True)
     phone = models.CharField(max_length=30, blank=True, null=True)
     email = models.EmailField(max_length=254, blank=True, null=True)

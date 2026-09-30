@@ -59,8 +59,8 @@
                     </div>
 
                     <!-- Login Form -->
-                    <!-- <form action="{% url 'login' %}" method="POST" id="loginForm"> -->
-                    <form method="POST" id="loginForm">
+                    <form action="{% url 'login' %}" method="POST" id="loginForm"
+                        data-login-error="{% if error %}true{% else %}false{% endif %}">
                         {% csrf_token %}
 
                         <!-- Username / Email Input -->
@@ -82,12 +82,12 @@
                         </div>
 
                         {% if error %}
-                        <p>{{ error }}</p>
+                        <p class="text-danger" role="alert" aria-live="assertive">{{ error }}</p>
                         {% endif %}
 
                         <!-- Submit Button -->
                         <button type="submit" class="btn btn-submit mt-2" id="btnSubmit">
-                            <span id="btnText">Login</span>
+                            <span id="btnText">{% if error %}Try again{% else %}Login{% endif %}</span>
                             <div class="spinner-border spinner-border-sm text-light d-none" id="btnSpinner"
                                 role="status"></div>
                         </button>
