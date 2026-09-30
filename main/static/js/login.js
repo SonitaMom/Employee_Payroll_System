@@ -7,7 +7,6 @@ document.addEventListener('DOMContentLoaded', function () {
     const btnText = document.querySelector('#btnText');
     const btnSpinner = document.querySelector('#btnSpinner');
 
-    // 1. Password Visibility Toggle
     if (togglePasswordBtn) {
         togglePasswordBtn.addEventListener('click', function () {
             const isPassword = passwordInput.getAttribute('type') === 'password';
@@ -18,12 +17,25 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // 2. Form Loading State Feedback
-    // if (loginForm) {
-    //     loginForm.addEventListener('submit', function (e) {
-    //         btnSubmit.disabled = true;
-    //         btnText.textContent = "Signing in...";
-    //         btnSpinner.classList.remove('d-none');
-    //     });
-    // }
+    if (loginForm && btnSubmit && btnText && btnSpinner) {
+        const loginFailed = loginForm.dataset.loginError === 'true';
+
+        if (loginFailed) {
+            btnSubmit.disabled = false;
+            btnText.textContent = 'Try again';
+            btnSpinner.classList.add('d-none');
+            btnSubmit.removeAttribute('aria-busy');
+        }
+
+        loginForm.addEventListener('submit', function () {
+            if (!loginForm.checkValidity()) {
+                return;
+            }
+
+            btnSubmit.disabled = true;
+            btnSubmit.setAttribute('aria-busy', 'true');
+            btnText.textContent = 'Signing in...';
+            btnSpinner.classList.remove('d-none');
+        });
+    }
 });

@@ -81,4 +81,12 @@ document.addEventListener('DOMContentLoaded', function () {
             link.classList.add('active');
         }
     });
+
+    const activeSubmenu = document.querySelector('.sidebar-submenu .nav-link-custom.active');
+    if (activeSubmenu && window.bootstrap) {
+        const submenu = activeSubmenu.closest('.collapse');
+        if (submenu) {
+            new bootstrap.Collapse(submenu, { toggle: false }).show();
+        }
+    }
 });
