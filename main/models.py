@@ -173,7 +173,6 @@ class Payment(models.Model):
         FAILED = "Failed", "Failed"
 
     payment_id = models.AutoField(primary_key=True)
-    # 1-to-1 mapping as specified by `Ref: Payroll.payroll_id - Payment.payroll_id`
     payroll = models.OneToOneField(
         Payroll, on_delete=models.PROTECT, related_name="payment"
     )

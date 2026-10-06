@@ -1,12 +1,456 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>404 - Page Not Found | PayPro</title>
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">
+    <link rel="stylesheet" href="{% static 'css/root.css' %}">
+    <style>
+        body {
+            background-color: var(--main-app-bg);
+            color: var(--primary-text);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow-x: hidden;
+            padding: 24px;
+        }
+
+        /* Ambient subtle background decorative glows */
+        .ambient-glow-1 {
+            position: fixed;
+            top: -120px;
+            right: -100px;
+            width: 420px;
+            height: 420px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(0, 102, 255, 0.12) 0%, rgba(0, 176, 255, 0.03) 70%, transparent 100%);
+            filter: blur(50px);
+            z-index: 0;
+            pointer-events: none;
+            animation: pulseGlow 8s ease-in-out infinite alternate;
+        }
+
+        .ambient-glow-2 {
+            position: fixed;
+            bottom: -140px;
+            left: -120px;
+            width: 480px;
+            height: 480px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(139, 92, 246, 0.1) 0%, rgba(0, 102, 255, 0.02) 70%, transparent 100%);
+            filter: blur(60px);
+            z-index: 0;
+            pointer-events: none;
+            animation: pulseGlow 10s ease-in-out infinite alternate-reverse;
+        }
+
+        @keyframes pulseGlow {
+            0% {
+                transform: scale(0.9) translate(0, 0);
+                opacity: 0.7;
+            }
+
+            100% {
+                transform: scale(1.1) translate(20px, -15px);
+                opacity: 1;
+            }
+        }
+
+        .error-card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius-lg);
+            box-shadow: 0 20px 40px -15px rgba(23, 32, 51, 0.08), 0 0 1px 1px rgba(226, 232, 240, 0.6);
+            width: 100%;
+            max-width: 680px;
+            padding: 48px 40px;
+            text-align: center;
+            position: relative;
+            z-index: 1;
+            backdrop-filter: blur(8px);
+            animation: fadeInUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+        }
+
+        @keyframes fadeInUp {
+            0% {
+                opacity: 0;
+                transform: translateY(24px) scale(0.98);
+            }
+
+            100% {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        /* PayPro Brand Header */
+        .brand-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 6px 14px;
+            background-color: rgba(0, 102, 255, 0.06);
+            border: 1px solid rgba(0, 102, 255, 0.15);
+            border-radius: 50px;
+            margin-bottom: 24px;
+        }
+
+        .brand-badge .brand-icon-mini {
+            width: 26px;
+            height: 26px;
+            background: linear-gradient(135deg, var(--primary-blue), var(--accent-bright-blue));
+            border-radius: 7px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #ffffff;
+            font-size: 0.85rem;
+            box-shadow: 0 2px 6px rgba(0, 102, 255, 0.35);
+        }
+
+        .brand-badge span {
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: var(--dark-navy);
+            letter-spacing: -0.01em;
+        }
+
+        /* SVG Illustration Styling and Animations */
+        .illustration-wrapper {
+            position: relative;
+            max-width: 380px;
+            margin: 0 auto 24px auto;
+        }
+
+        .error-svg {
+            width: 100%;
+            height: auto;
+            overflow: visible;
+        }
+
+        /* SVG Keyframe Animations */
+        @keyframes floatUpDown {
+
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-10px);
+            }
+        }
+
+        @keyframes gentleRotate {
+
+            0%,
+            100% {
+                transform: rotate(0deg);
+            }
+
+            50% {
+                transform: rotate(6deg);
+            }
+        }
+
+        @keyframes orbitRadar {
+            0% {
+                transform: rotate(0deg);
+                transform-origin: 200px 145px;
+            }
+
+            100% {
+                transform: rotate(360deg);
+                transform-origin: 200px 145px;
+            }
+        }
+
+        @keyframes pulseDot {
+
+            0%,
+            100% {
+                opacity: 0.3;
+                transform: scale(0.85);
+            }
+
+            50% {
+                opacity: 1;
+                transform: scale(1.15);
+            }
+        }
+
+        @keyframes beamGlow {
+
+            0%,
+            100% {
+                opacity: 0.45;
+            }
+
+            50% {
+                opacity: 0.85;
+            }
+        }
+
+        .svg-floating-group {
+            animation: floatUpDown 4.2s ease-in-out infinite;
+        }
+
+        .svg-search-tool {
+            animation: gentleRotate 5s ease-in-out infinite;
+            transform-origin: 200px 145px;
+        }
+
+        .svg-radar-sweep {
+            animation: orbitRadar 8s linear infinite;
+        }
+
+        .svg-pulse-star1 {
+            animation: pulseDot 2.8s ease-in-out infinite;
+            transform-origin: 90px 75px;
+        }
+
+        .svg-pulse-star2 {
+            animation: pulseDot 3.4s ease-in-out infinite 0.9s;
+            transform-origin: 310px 80px;
+        }
+
+        .svg-pulse-star3 {
+            animation: pulseDot 2.5s ease-in-out infinite 1.6s;
+            transform-origin: 190px 30px;
+        }
+
+        .svg-glow-beam {
+            animation: beamGlow 3s ease-in-out infinite;
+        }
+
+        /* Error Messaging */
+        .error-title {
+            font-size: 1.85rem;
+            font-weight: 700;
+            color: var(--dark-navy);
+            letter-spacing: -0.02em;
+            margin-bottom: 12px;
+        }
+
+        .error-description {
+            font-size: 0.98rem;
+            color: var(--muted-text);
+            max-width: 480px;
+            margin: 0 auto 30px auto;
+            line-height: 1.6;
+        }
+
+        /* Actions */
+        .action-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 14px;
+            flex-wrap: wrap;
+        }
+
+        .btn-home {
+            background: linear-gradient(135deg, var(--primary-blue), #0052cc);
+            border: 1px solid var(--primary-blue);
+            color: #ffffff;
+            font-weight: 600;
+            font-size: 0.95rem;
+            border-radius: var(--border-radius-sm);
+            padding: 12px 26px;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.25s ease;
+            box-shadow: 0 4px 14px rgba(0, 102, 255, 0.35);
+            text-decoration: none;
+        }
+
+        .btn-home:hover {
+            color: #ffffff;
+            background: linear-gradient(135deg, #0052cc, #003d99);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 18px rgba(0, 102, 255, 0.45);
+        }
+
+        .btn-home i {
+            font-size: 1.1rem;
+            transition: transform 0.2s ease;
+        }
+
+        .btn-home:hover i {
+            transform: scale(1.15);
+        }
+
+        .btn-back {
+            background-color: var(--main-app-bg);
+            border: 1px solid var(--border-color);
+            color: var(--primary-text);
+            font-weight: 600;
+            font-size: 0.95rem;
+            border-radius: var(--border-radius-sm);
+            padding: 12px 22px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            text-decoration: none;
+        }
+
+        .btn-back:hover {
+            background-color: #e2e8f0;
+            color: var(--dark-navy);
+            transform: translateY(-2px);
+        }
+
+        /* Status Pills / Quick Helpful Info */
+        .quick-help {
+            margin-top: 36px;
+            padding-top: 24px;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+            font-size: 0.82rem;
+            color: var(--muted-text);
+        }
+
+        .quick-help span {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        @media (max-width: 575.98px) {
+            .error-card {
+                padding: 32px 20px;
+            }
+
+            .error-title {
+                font-size: 1.5rem;
+            }
+
+            .action-container {
+                flex-direction: column;
+                width: 100%;
+            }
+
+            .btn-home,
+            .btn-back {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
 </head>
+
 <body>
-    <h1>404</h1>
-    
+    <div class="ambient-glow-1"></div>
+    <div class="ambient-glow-2"></div>
+    <div class="error-card">
+        <div class="brand-badge">
+            <div class="brand-icon-mini">
+                <i class="bi bi-wallet2"></i>
+            </div>
+            <span>PayPro</span>
+        </div>
+
+        <div class="illustration-wrapper">
+            <svg class="error-svg" viewBox="0 0 400 240" fill="none" xmlns="http://www.w3.org/2000/svg" role="img"
+                aria-label="Page Not Found Illustration">
+                <defs>
+                    <linearGradient id="primaryGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="#0066FF" />
+                        <stop offset="100%" stop-color="#00B0FF" />
+                    </linearGradient>
+                    <linearGradient id="navyGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="#172033" />
+                        <stop offset="100%" stop-color="#2D3B55" />
+                    </linearGradient>
+                    <linearGradient id="softCardGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                        <stop offset="0%" stop-color="#FFFFFF" />
+                        <stop offset="100%" stop-color="#F4F6F9" />
+                    </linearGradient>
+                    <linearGradient id="beamGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="#00B0FF" stop-opacity="0.35" />
+                        <stop offset="100%" stop-color="#0066FF" stop-opacity="0.0" />
+                    </linearGradient>
+                    <filter id="shadowEffect" x="-10%" y="-10%" width="120%" height="130%" filterUnits="userSpaceOnUse">
+                        <feDropShadow dx="0" dy="6" stdDeviation="8" flood-color="#172033" flood-opacity="0.14" />
+                    </filter>
+                </defs>
+                <ellipse cx="200" cy="222" rx="140" ry="12" fill="#E2E8F0" />
+                <ellipse cx="200" cy="222" rx="85" ry="7" fill="#CBD5E1" />
+                <g class="svg-pulse-star1">
+                    <circle cx="90" cy="75" r="4.5" fill="#00B0FF" />
+                    <circle cx="90" cy="75" r="10" stroke="#00B0FF" stroke-opacity="0.3" stroke-width="1.5" />
+                </g>
+                <g class="svg-pulse-star2">
+                    <circle cx="310" cy="80" r="4" fill="#8B5CF6" />
+                    <circle cx="310" cy="80" r="8" stroke="#8B5CF6" stroke-opacity="0.25" stroke-width="1.5" />
+                </g>
+                <g class="svg-pulse-star3">
+                    <circle cx="190" cy="30" r="3" fill="#0066FF" />
+                </g>
+                <g class="svg-floating-group">
+                    <text x="48" y="165" fill="url(#navyGrad)" font-family="'Inter', sans-serif" font-weight="900"
+                        font-size="118" letter-spacing="-4">4</text>
+                    <text x="252" y="165" fill="url(#navyGrad)" font-family="'Inter', sans-serif" font-weight="900"
+                        font-size="118" letter-spacing="-4">4</text>
+                    <g transform="translate(0, 0)">
+                        <circle cx="200" cy="120" r="56" fill="url(#softCardGrad)" stroke="#E2E8F0" stroke-width="4"
+                            filter="url(#shadowEffect)" />
+                        <circle cx="200" cy="120" r="46" fill="#F4F6F9" stroke="url(#primaryGrad)" stroke-width="2"
+                            stroke-dasharray="4 3" />
+                        <rect x="183" y="103" width="34" height="34" rx="9" fill="url(#primaryGrad)" />
+                        <path
+                            d="M 191 114 H 209 C 210.5 114 211.5 115 211.5 116.5 V 125.5 C 211.5 127 210.5 128 209 128 H 191 C 189.5 128 188.5 127 188.5 125.5 V 116.5 C 188.5 115 189.5 114 191 114 Z"
+                            fill="#FFFFFF" fill-opacity="0.9" />
+                        <circle cx="206" cy="121" r="1.6" fill="#0066FF" />
+                        <path d="M 189.5 117.5 H 210.5" stroke="#0066FF" stroke-width="1.2" stroke-opacity="0.35" />
+                    </g>
+
+                    <g class="svg-search-tool">
+                        <circle cx="228" cy="88" r="24" fill="#00B0FF" fill-opacity="0.12" stroke="#0066FF"
+                            stroke-width="3" />
+                        <path d="M 216 78 A 18 18 0 0 1 238 76" stroke="#FFFFFF" stroke-width="2.5"
+                            stroke-linecap="round" />
+                        <line x1="245" y1="105" x2="265" y2="125" stroke="#172033" stroke-width="5"
+                            stroke-linecap="round" />
+                        <line x1="246" y1="106" x2="258" y2="118" stroke="#00B0FF" stroke-width="2"
+                            stroke-linecap="round" />
+                    </g>
+                </g>
+            </svg>
+        </div>
+
+        <h1 class="error-title">Page Not Found</h1>
+        <p class="error-description">
+            Oops! The page or record you are looking for doesn't exist, has been removed, or you may have entered an
+            incorrect URL.
+        </p>
+        <div class="action-container">
+            <a href="/" class="btn-home" id="btnBackHome">
+                <i class="bi bi-house-door-fill"></i>
+                <span>Back to Home</span>
+            </a>
+            <button type="button" class="btn-back" id="btnGoBack"
+                onclick="if(history.length > 1){ history.back(); } else { window.location.href='/'; }">
+                <i class="bi bi-arrow-left"></i>
+                <span>Previous Page</span>
+            </button>
+        </div>
+    </div>
 </body>
+
 </html>

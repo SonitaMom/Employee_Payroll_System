@@ -91,9 +91,15 @@ body {
     overflow-x: hidden;
 }
 
-h1{
-    font-size: 1.25rem;
+h1 {
+    font-size: clamp(1rem, 1.25rem, 1.3rem);
     font-weight: 700;
+}
+
+h2,
+h3 {
+    font-size: clamp(0.9rem, 1.1rem, 1.25rem);
+    font-weight: 600;
 }
 
 a {
@@ -146,7 +152,7 @@ a {
     gap: 12px;
     padding: 16px 24px 0 24px;
     color: #ffffff;
-    font-size: 1.25rem;
+    font-size: clamp(1rem, 1.25rem, 1.3rem);
     font-weight: 700;
     letter-spacing: -0.02em;
     border-bottom: 1px solid rgba(255, 255, 255, 0.06);
@@ -295,7 +301,7 @@ body.sidebar-collapsed .app-main {
     background: transparent;
     border: none;
     color: var(--primary-text);
-    font-size: 1.25rem;
+    font-size: clamp(1rem, 1.25rem, 1.3rem);
     padding: 8px;
     border-radius: var(--border-radius-sm);
     display: flex;
@@ -428,7 +434,7 @@ body.sidebar-collapsed .app-main {
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.25rem;
+    font-size: clamp(1rem, 1.25rem, 1.3rem);
 }
 
 .metric-icon-blue {
@@ -485,10 +491,6 @@ body.sidebar-collapsed .app-main {
 @media (max-width: 575.98px) {
     .header-left {
         max-width: 180px;
-    }
-
-    .header-search-input {
-        font-size: 0.82rem;
     }
 
     .user-info {
