@@ -1,13 +1,10 @@
-from django.shortcuts import render
-
-# Create your views here.
-
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required, permission_required
 from django.shortcuts import render, redirect
-from .models import Employee
-
-
+from .models import *
+from django.db.models import Sum, Count
+from django.db.models.functions import TruncMonth
+from django.utils import timezone
 
 def home(request):
     if request.user.is_authenticated:
@@ -43,9 +40,48 @@ def logout_view(request):
 
 
 @login_required
+@permission_required("main.view_dashboard", raise_exception=True)
 def dashboard(request):
+
+    total_employees = Employee.objects.count()
+    total_payment = Payment.objects.filter(status=Payment.StatusChoices.COMPLETED).aggregate(Sum('amount'))['amount__sum'] or 0
+    paid_count = Payment.objects.filter(status=Payment.StatusChoices.COMPLETED).count()
+    pending_count = Payment.objects.filter(status=Payment.StatusChoices.PENDING).count()
+
+    monthly_payment = list(
+    Payment.objects
+    .filter(status="Completed")
+    .annotate(month=TruncMonth("payment_date"))
+    .values("month")
+    .annotate(total=Sum("amount"))
+    .order_by("month")
+    )
+    for item in monthly_payment:
+        item["month"] = item["month"].strftime("%b %Y")
+    
+    total_absent = Attendance.objects.filter(date=timezone.now().date(), status=Attendance.StatusChoices.ABSENT).count()
+    total_present = Attendance.objects.filter(date=timezone.now().date(), status=Attendance.StatusChoices.PRESENT).count()
+    total_leave = Attendance.objects.filter(date=timezone.now().date(), status=Attendance.StatusChoices.LEAVE).count()
+    total_ot_hours = Attendance.objects.filter(date=timezone.now().date()).aggregate(Sum('ot_hours'))['ot_hours__sum'] or 0
+
+
+
     return render(request, "dashboard.html", {
-        "title": "Dashboard"
+        "title": "Dashboard",
+        "total_employees": total_employees,
+        "total_payment": total_payment,
+        "paid_count": paid_count,
+        "pending_count": pending_count,
+
+        "monthly_payment": monthly_payment,
+
+        "total_absent": total_absent,
+        "total_present": total_present,
+        "total_leave": total_leave,
+        "total_ot_hours": total_ot_hours,
+
+
+
     })
 
 

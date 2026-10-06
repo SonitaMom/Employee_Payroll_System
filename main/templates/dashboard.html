@@ -1,11 +1,77 @@
 {% extends 'base.html' %}
+{% load static %}
 
-{% block title %}Dashboard - Employee Payroll System{% endblock %}
+{% block extra_meta %}
+
+
+{% endblock %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+
+{% endblock %}
 
 {% block content %}
-<h1>Dashboard</h1>
 
-<p>Welcome, {{ user.username }}!</p>
+<div class="row">
+    <div class="col-6 col-lg-3">
+        <p>{{ total_employees }}</p>
+    </div>
+    <div class="col-6 col-lg-3">
+        <p>{{ total_payment }}</p>
+    </div>
+    <div class="col-6 col-lg-3">
+        <p>{{ paid_count }}</p>
+    </div>
+    <div class="col-6 col-lg-3">
+        <p>{{ pending_count }}</p>
+    </div>
+</div>
 
-<a href="{% url 'logout' %}">Logout</a>
+
+<!-- Graph Monthly Payroll -->
+{{ monthly_payment|json_script:"monthly-payment-data" }}
+<div class="row">
+    <div class="col-12 col-lg-6">
+        <h2>Monthly Payment</h2>
+        <canvas id="paymentChart"></canvas>
+    </div>
+
+    <div class="col-12 col-lg-6">
+
+        <!-- Today Attendance -->
+        <h2>Today Attendance</h2>
+        <div class="row">
+            <div class="col-6 col-lg-3">
+                <p>{{ total_absent }}</p>
+            </div>
+            <div class="col-6 col-lg-3">
+                <p>{{ total_present }}</p>
+            </div>
+            <div class="col-6 col-lg-3">
+                <p>{{ total_leave }}</p>
+            </div>
+            <div class="col-6 col-lg-3">
+                <p>{{ total_ot_hours }}</p>
+            </div>
+        </div>
+
+        <!-- recent attendence/activity -->
+
+    </div>
+</div>
+
+
+
+
+
+{% endblock %}
+
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="{% static 'js/dashboard.js' %}"></script>
+
 {% endblock %}
