@@ -1,77 +1,187 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load humanize %}
 
-{% block extra_meta %}
-
-
-{% endblock %}
-
-{% block title %}Dashboard{% endblock %}
+{% block title %}Dashboard | PayPro{% endblock %}
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
-
 {% endblock %}
 
 {% block content %}
-
-<div class="row">
-    <div class="col-6 col-lg-3">
-        <p>{{ total_employees }}</p>
-    </div>
-    <div class="col-6 col-lg-3">
-        <p>{{ total_payment }}</p>
-    </div>
-    <div class="col-6 col-lg-3">
-        <p>{{ paid_count }}</p>
-    </div>
-    <div class="col-6 col-lg-3">
-        <p>{{ pending_count }}</p>
-    </div>
-</div>
-
-
-<!-- Graph Monthly Payroll -->
-{{ monthly_payment|json_script:"monthly-payment-data" }}
-<div class="row">
-    <div class="col-12 col-lg-6">
-        <h2>Monthly Payment</h2>
-        <canvas id="paymentChart"></canvas>
-    </div>
-
-    <div class="col-12 col-lg-6">
-
-        <!-- Today Attendance -->
-        <h2>Today Attendance</h2>
-        <div class="row">
-            <div class="col-6 col-lg-3">
-                <p>{{ total_absent }}</p>
-            </div>
-            <div class="col-6 col-lg-3">
-                <p>{{ total_present }}</p>
-            </div>
-            <div class="col-6 col-lg-3">
-                <p>{{ total_leave }}</p>
-            </div>
-            <div class="col-6 col-lg-3">
-                <p>{{ total_ot_hours }}</p>
+<div class="dashboard-wrapper">
+    <!-- Top KPI Stat Cards -->
+    <div class="row g-3 g-lg-4 mb-4">
+        <!-- 1. Total Employees -->
+        <div class="col-6 col-xl-3">
+            <div class="stat-card">
+                <div class="stat-icon stat-icon-blue">
+                    <i class="bi bi-people-fill"></i>
+                </div>
+                <div class="stat-content">
+                    <span class="stat-label">Total Employees</span>
+                    <span class="stat-value">{{ total_employees }}</span>
+                    <span class="stat-subtext highlight-green">
+                        +{{ employees_this_month|default:"0" }} this month
+                    </span>
+                </div>
             </div>
         </div>
 
-        <!-- recent attendence/activity -->
+        <!-- 2. Total Payroll -->
+        <div class="col-6 col-xl-3">
+            <div class="stat-card">
+                <div class="stat-icon stat-icon-green">
+                    <i class="bi bi-wallet2"></i>
+                </div>
+                <div class="stat-content">
+                    <span class="stat-label">Total Payroll</span>
+                    <span class="stat-value">${{ total_payment|floatformat:0|intcomma }}</span>
+                    <span class="stat-subtext">
+                        {{ current_month_name }}
+                    </span>
+                </div>
+            </div>
+        </div>
 
+        <!-- 3. Paid -->
+        <div class="col-6 col-xl-3">
+            <div class="stat-card">
+                <div class="stat-icon stat-icon-purple">
+                    <i class="bi bi-check-circle-fill"></i>
+                </div>
+                <div class="stat-content">
+                    <span class="stat-label">Paid</span>
+                    <span class="stat-value">{{ paid_count }}</span>
+                    <span class="stat-subtext">
+                        {{ paid_percent }}%
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. Pending -->
+        <div class="col-6 col-xl-3">
+            <div class="stat-card">
+                <div class="stat-icon stat-icon-orange">
+                    <i class="bi bi-hourglass-split"></i>
+                </div>
+                <div class="stat-content">
+                    <span class="stat-label">Pending</span>
+                    <span class="stat-value">{{ pending_count }}</span>
+                    <span class="stat-subtext">
+                        {{ pending_percent }}%
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Monthly Payment Data for Chart.js -->
+    {{ monthly_payment|json_script:"monthly-payment-data" }}
+
+    <!-- Main Content Grid (Monthly Overview & Recent Activities) -->
+    <div class="row g-3 g-lg-4">
+        <!-- Left Panel: Monthly Payroll Overview (Bar Chart) -->
+        <div class="col-12 col-lg-7 col-xl-7">
+            <div class="dashboard-panel-card">
+                <div class="panel-header">
+                    <h2 class="panel-title">Monthly Payroll Overview</h2>
+                </div>
+                <div class="chart-container">
+                    <canvas id="paymentChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Panel: Recent Activities (3 Latest Activities) -->
+        <div class="col-12 col-lg-5 col-xl-5">
+            <div class="dashboard-panel-card">
+                <div class="panel-header">
+                    <h2 class="panel-title">Recent Activities</h2>
+                    <a href="/admin/admin/logentry/" class="panel-link-all">
+                        <span>View all</span>
+                        <i class="bi bi-chevron-right small"></i>
+                    </a>
+                </div>
+
+                <div class="activity-list">
+                    {% for activity in recent_activities %}
+                    <div class="activity-item">
+                        <div class="activity-icon-badge bg-{{ activity.icon_bg }}-soft">
+                            <i class="bi {{ activity.icon }}"></i>
+                        </div>
+                        <div class="activity-info">
+                            <h3 class="activity-title">{{ activity.title }}</h3>
+                            <p class="activity-description">{{ activity.description }}</p>
+                        </div>
+                        <div class="activity-time">
+                            {{ activity.time_ago }}
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="text-center py-4 text-muted">
+                        <i class="bi bi-inbox fs-2 d-block mb-2 text-secondary"></i>
+                        <span>No recent activities recorded yet.</span>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Attendance Today Quick Summary Strip -->
+    <div class="attendance-summary-card">
+        <div class="d-flex align-items-center justify-content-between mb-3">
+            <h3 class="panel-title fs-6">Today's Attendance Snapshot</h3>
+            <a href="{% url 'attendance_test' %}" class="panel-link-all">
+                <span>View All</span>
+                <i class="bi bi-arrow-right small"></i>
+            </a>
+        </div>
+        <div class="row g-2">
+            <div class="col-6 col-md-3">
+                <div class="attendance-mini-stat">
+                    <div class="dot dot-present"></div>
+                    <div>
+                        <div class="val">{{ total_present }}</div>
+                        <div class="lbl">Present</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="attendance-mini-stat">
+                    <div class="dot dot-absent"></div>
+                    <div>
+                        <div class="val">{{ total_absent }}</div>
+                        <div class="lbl">Absent</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="attendance-mini-stat">
+                    <div class="dot dot-leave"></div>
+                    <div>
+                        <div class="val">{{ total_leave }}</div>
+                        <div class="lbl">On Leave</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="attendance-mini-stat">
+                    <div class="dot dot-ot"></div>
+                    <div>
+                        <div class="val">{{ total_ot_hours }}h</div>
+                        <div class="lbl">Overtime</div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
-
-
-
-
-
 {% endblock %}
-
 
 {% block extra_js %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="{% static 'js/dashboard.js' %}"></script>
-
 {% endblock %}
