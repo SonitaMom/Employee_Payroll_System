@@ -2,9 +2,13 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required, permission_required
 from django.shortcuts import render, redirect
 from .models import *
-from django.db.models import Sum, Count
+from django.db.models import Sum, Count, Q
 from django.db.models.functions import TruncMonth
 from django.utils import timezone
+
+from datetime import date
+from calendar import monthrange
+
 
 def home(request):
     if request.user.is_authenticated:
@@ -124,12 +128,27 @@ def employee_test(request):
     })
 
 
+
+
+
+
+
+
+
+
+
+# no need
 @login_required
 @permission_required("main.view_department", raise_exception=True)
 def department_test(request):
     return render(request, "departments/test.html", {
         "title": "test"
     })
+
+
+
+
+
 
 
 @login_required
@@ -146,6 +165,89 @@ def attendance_test(request):
     return render(request, "attendance/test.html", {
         "title": "test"
     })
+
+
+@login_required
+@permission_required("main.view_attendance", raise_exception=True)
+def attendance_record(request):
+    today = date.today()
+
+    month = int(request.GET.get("month", today.month))
+    year = int(request.GET.get("year", today.year))
+
+    days_in_month = monthrange(year, month)[1]
+
+    month_start = date(year, month, 1)
+    month_end = date(year, month, days_in_month)
+
+    employees = Employee.objects.filter(
+        hire_date__lte=month_end
+    ).filter(
+        Q(inactive_date__isnull=True) |
+        Q(inactive_date__gte=month_start)
+    ).order_by("employee_id")
+
+    attendance = Attendance.objects.filter(
+        date__year=year,
+        date__month=month,
+    )
+
+    attendance_map = {
+        (item.employee_id, item.date.day): item.status
+        for item in attendance
+    }
+
+    status_short = {
+        "Present": "P",
+        "Absent": "A",
+        "Leave": "L",
+    }
+
+    attendance_rows = []
+
+    for employee in employees:
+        days = []
+        present = 0
+        absent = 0
+        leave = 0
+
+        for day in range(1, days_in_month + 1):
+            status = attendance_map.get(
+                (employee.employee_id, day)
+            )
+
+            days.append(status_short.get(status, "-"))
+
+            if status == "Present":
+                present += 1
+            elif status == "Absent":
+                absent += 1
+            elif status == "Leave":
+                leave += 1
+
+        attendance_rows.append({
+            "employee": employee,
+            "days": days,
+            "present": present,
+            "absent": absent,
+            "leave": leave,
+        })
+
+    return render(request, "attendance/record.html", {
+        "title": "Attendance Record",
+        "attendance_rows": attendance_rows,
+        "days_in_month": range(1, days_in_month + 1),
+        "month": month,
+        "year": year,
+    })
+
+
+
+
+
+
+
+
 
 
 @login_required

@@ -115,6 +115,13 @@
                             </a>
                         </li>
 
+                        <li>
+                            <a href="{% url 'attendance_record' %}" class="nav-link-custom">
+                                <i class="bi bi-file-earmark-text-fill"></i>
+                                <span>Record</span>
+                            </a>
+                        </li>
+
                     </ul>
                 </li>
 
@@ -226,10 +233,10 @@
             <!-- Header / Topbar -->
             <header class="app-header">
                 <div class="header-left">
-                    <button class="btn-sidebar-toggle" id="sidebarToggle" type="button" aria-label="Toggle sidebar">
+                    <button class="btn-sidebar-toggle no-print" id="sidebarToggle" type="button" aria-label="Toggle sidebar">
                         <i class="bi bi-list"></i>
                     </button>
-                    <h1 class="m-0">{{ title }}</h1>
+                    <h1 class="m-0 text-nowrap">{{ title }}</h1>
                 </div>
 
                 <div class="header-right">

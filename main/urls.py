@@ -20,7 +20,9 @@ urlpatterns = [
 
 
     path("attendance/test/", views.attendance_test, name="attendance_test"),
+    path("attendance/record/", views.attendance_record, name="attendance_record"),
 
+ 
 
     path("payroll/test/", views.payroll_test, name="payroll_test"),
 
