@@ -19,12 +19,13 @@ urlpatterns = [
     path("positions/test/", views.position_test, name="position_test"),
 
 
-    path("attendance/test/", views.attendance_test, name="attendance_test"),
     path("attendance/record/", views.attendance_record, name="attendance_record"),
 
  
 
-    path("payroll/test/", views.payroll_test, name="payroll_test"),
+    path("payroll/", views.payroll, name="payroll"),
+    path("payroll/new-payroll", views.new_payroll, name="new_payroll"),
+    path("payroll/update/<int:payroll_id>/", views.update_payroll, name="update_payroll"),
 
 
     path("payments/test/", views.payments_test, name="payments_test"),
@@ -33,7 +34,7 @@ urlpatterns = [
     path("payslips/test/", views.payslips_test, name="payslips_test"),
 
 
-    path("reports/test/", views.reports_test, name="reports_test"),
+    path("reports/", views.reports, name="reports"),
 
 
     path("settings/test/", views.settings_test, name="settings_test"),
