@@ -55,6 +55,7 @@ class Employee(models.Model):
     )
 
     hire_date = models.DateField()
+    inactive_date = models.DateField(null=True, blank=True)
     status = models.CharField(
         max_length=20,
         choices=StatusChoices.choices,
