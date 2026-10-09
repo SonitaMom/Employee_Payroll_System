@@ -55,6 +55,7 @@ class Employee(models.Model):
     )
 
     hire_date = models.DateField()
+    inactive_date = models.DateField(null=True, blank=True)
     status = models.CharField(
         max_length=20,
         choices=StatusChoices.choices,
@@ -173,7 +174,6 @@ class Payment(models.Model):
         FAILED = "Failed", "Failed"
 
     payment_id = models.AutoField(primary_key=True)
-    # 1-to-1 mapping as specified by `Ref: Payroll.payroll_id - Payment.payroll_id`
     payroll = models.OneToOneField(
         Payroll, on_delete=models.PROTECT, related_name="payment"
     )

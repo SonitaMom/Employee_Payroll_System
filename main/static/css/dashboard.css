@@ -1,0 +1,306 @@
+/* ==========================================================================
+   Dashboard Page Specific Styles (dashboard.css)
+   Complements root.css design system
+   ========================================================================== */
+
+/* Top KPI Stat Card Styles */
+.stat-card {
+    background-color: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 20px 22px;
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.02);
+    height: 100%;
+}
+
+.stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px -8px rgba(15, 23, 42, 0.08), 0 4px 6px -2px rgba(15, 23, 42, 0.03);
+    border-color: #cbd5e1;
+}
+
+/* Stat Icon Boxes matching the reference screenshot */
+.stat-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.35rem;
+    flex-shrink: 0;
+    transition: transform 0.2s ease;
+}
+
+.stat-card:hover .stat-icon {
+    transform: scale(1.05);
+}
+
+.stat-icon-blue {
+    background-color: #EBF3FF;
+    color: #0066FF;
+}
+
+.stat-icon-green {
+    background-color: #E8F9F1;
+    color: #10B981;
+}
+
+.stat-icon-purple {
+    background-color: #F1EDFE;
+    color: #8B5CF6;
+}
+
+.stat-icon-orange {
+    background-color: #FEF3EB;
+    color: #F59E0B;
+}
+
+.stat-content {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    flex-grow: 1;
+}
+
+.stat-label {
+    font-size: 0.82rem;
+    font-weight: 500;
+    color: var(--muted-text);
+    margin-bottom: 4px;
+    letter-spacing: -0.01em;
+}
+
+.stat-value {
+    font-size: 1.65rem;
+    font-weight: 700;
+    color: var(--primary-text);
+    line-height: 1.2;
+    margin-bottom: 4px;
+    letter-spacing: -0.03em;
+}
+
+.stat-subtext {
+    font-size: 0.78rem;
+    font-weight: 500;
+    color: #94A3B8;
+    margin: 0;
+}
+
+.stat-subtext.highlight-green {
+    color: #10B981;
+}
+
+/* Main Dashboard Panel Cards */
+.dashboard-panel-card {
+    background-color: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 18px;
+    padding: 24px 28px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.02);
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 22px;
+}
+
+.panel-title {
+    font-size: 1.12rem;
+    font-weight: 700;
+    color: var(--primary-text);
+    margin: 0;
+    letter-spacing: -0.02em;
+}
+
+.panel-link-all {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--primary-blue);
+    text-decoration: none;
+    transition: color 0.2s ease, transform 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.panel-link-all:hover {
+    color: #0052cc;
+    transform: translateX(2px);
+}
+
+/* Chart Canvas Container */
+.chart-container {
+    position: relative;
+    width: 100%;
+    height: 290px;
+    flex-grow: 1;
+}
+
+/* Recent Activities List */
+.activity-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    flex-grow: 1;
+}
+
+.activity-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 10px 12px;
+    border-radius: 12px;
+    transition: background-color 0.2s ease;
+}
+
+.activity-item:hover {
+    background-color: #F8FAFC;
+}
+
+.activity-icon-badge {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    flex-shrink: 0;
+}
+
+.activity-icon-badge.bg-primary-soft {
+    background-color: #EBF3FF;
+    color: #0066FF;
+}
+
+.activity-icon-badge.bg-success-soft {
+    background-color: #E8F9F1;
+    color: #10B981;
+}
+
+.activity-icon-badge.bg-purple-soft {
+    background-color: #F1EDFE;
+    color: #8B5CF6;
+}
+
+.activity-icon-badge.bg-orange-soft {
+    background-color: #FEF3EB;
+    color: #F59E0B;
+}
+
+.activity-info {
+    flex-grow: 1;
+    min-width: 0;
+}
+
+.activity-title {
+    font-size: 0.92rem;
+    font-weight: 700;
+    color: var(--primary-text);
+    margin-bottom: 2px;
+    line-height: 1.3;
+}
+
+.activity-description {
+    font-size: 0.82rem;
+    font-weight: 500;
+    color: #94A3B8;
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.activity-time {
+    font-size: 0.78rem;
+    color: #94A3B8;
+    font-weight: 500;
+    white-space: nowrap;
+    margin-left: 8px;
+    flex-shrink: 0;
+}
+
+/* Attendance Quick Summary Strip */
+.attendance-summary-card {
+    background-color: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 18px 24px;
+    margin-top: 24px;
+}
+
+.attendance-mini-stat {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px;
+}
+
+.attendance-mini-stat .dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+}
+
+.attendance-mini-stat .dot.dot-present {
+    background-color: var(--success-green);
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
+}
+
+.attendance-mini-stat .dot.dot-absent {
+    background-color: var(--error-red);
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2);
+}
+
+.attendance-mini-stat .dot.dot-leave {
+    background-color: var(--warning-orange);
+    box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.2);
+}
+
+.attendance-mini-stat .dot.dot-ot {
+    background-color: var(--purple-metric);
+    box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.2);
+}
+
+.attendance-mini-stat .val {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--primary-text);
+}
+
+.attendance-mini-stat .lbl {
+    font-size: 0.78rem;
+    color: var(--muted-text);
+    font-weight: 500;
+}
+
+/* Responsive adjustments */
+@media (max-width: 767.98px) {
+    .stat-card {
+        padding: 16px;
+    }
+    .stat-value {
+        font-size: 1.4rem;
+    }
+    .stat-icon {
+        width: 42px;
+        height: 42px;
+        font-size: 1.15rem;
+    }
+    .dashboard-panel-card {
+        padding: 20px 18px;
+    }
+    .chart-container {
+        height: 240px;
+    }
+}

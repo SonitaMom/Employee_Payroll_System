@@ -1,0 +1,130 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Attendance Record | PayPro{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/attendance/record.css' %}">
+{% endblock %}
+
+{% block content %}
+
+<div class="d-flex mb-3">
+
+    <div class="d-flex gap-2 justify-content-between align-items-center flex-wrap w-100">
+
+        <form method="get" action="{% url 'attendance_record' %}" class="d-flex gap-2 no-print">
+
+            <select name="month" class="form-select" required>
+                <option value="1" {% if month == 1 %}selected{% endif %}>January</option>
+                <option value="2" {% if month == 2 %}selected{% endif %}>February</option>
+                <option value="3" {% if month == 3 %}selected{% endif %}>March</option>
+                <option value="4" {% if month == 4 %}selected{% endif %}>April</option>
+                <option value="5" {% if month == 5 %}selected{% endif %}>May</option>
+                <option value="6" {% if month == 6 %}selected{% endif %}>June</option>
+                <option value="7" {% if month == 7 %}selected{% endif %}>July</option>
+                <option value="8" {% if month == 8 %}selected{% endif %}>August</option>
+                <option value="9" {% if month == 9 %}selected{% endif %}>September</option>
+                <option value="10" {% if month == 10 %}selected{% endif %}>October</option>
+                <option value="11" {% if month == 11 %}selected{% endif %}>November</option>
+                <option value="12" {% if month == 12 %}selected{% endif %}>December</option>
+            </select>
+
+            <input type="number" name="year" class="form-control" value="{{ year }}" min="2000" max="2100" required
+                style="width: 100px;">
+
+            <button type="submit" class="btn btn-primary">
+                <i class="bi bi-search"></i>
+            </button>
+        </form>
+
+        <div>
+            <button type="button" class="btn btn-outline-secondary no-print" onclick="window.print()">
+                <i class="bi bi-printer"></i>
+            </button>
+
+            <button type="button" class="btn btn-outline-primary no-print" id="copyRecordLink">
+                <i class="bi bi-link-45deg"></i>
+            </button>
+        </div>
+    </div>
+</div>
+
+
+
+<div class="table-responsive">
+
+    <p class="print-only text-end">
+        {% if month == 1 %}January
+        {% elif month == 2 %}February
+        {% elif month == 3 %}March
+        {% elif month == 4 %}April
+        {% elif month == 5 %}May
+        {% elif month == 6 %}June
+        {% elif month == 7 %}July
+        {% elif month == 8 %}August
+        {% elif month == 9 %}September
+        {% elif month == 10 %}October
+        {% elif month == 11 %}November
+        {% elif month == 12 %}December
+        {% endif %}/{{ year }}
+    </p>
+
+    <table class="table table-bordered text-center align-middle">
+
+        <thead>
+            <tr>
+                <th>No.</th>
+                <th>Employee</th>
+
+                {% for day in days_in_month %}
+                <th>{{ day }}</th>
+                {% endfor %}
+                <th>P</th>
+                <th>A</th>
+                <th>L</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            {% for row in attendance_rows %}
+            <tr>
+                <td>{{ forloop.counter }}</td>
+
+                <td class="text-start text-nowrap">
+                    {{ row.employee.first_name }}
+                    {{ row.employee.last_name }}
+                </td>
+
+                {% for status in row.days %}
+                <td>{{ status }}</td>
+                {% endfor %}
+                <td>{{ row.present }}</td>
+                <td>{{ row.absent }}</td>
+                <td>{{ row.leave }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="{{ days_in_month|length|add:5 }}" class=" text-center">
+                    No employees found.
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+
+    </table>
+
+</div>
+
+
+
+
+{% endblock %}
+
+
+
+
+
+{% block extra_js %}
+<script src="{% static 'js/attendance/record.js' %}"></script>
+{% endblock %}
