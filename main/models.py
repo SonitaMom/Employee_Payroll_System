@@ -115,13 +115,8 @@ class Payroll(models.Model):
 
     pay_period = models.DateField()
 
-    # Salary snapshot at the time payroll is created
     basic_salary = models.DecimalField(max_digits=12, decimal_places=2)
-
-    # Money calculated from overtime
     ot_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
-
-    # Final salary after bonuses, allowances, deductions, and tax
     net_salary = models.DecimalField(max_digits=12, decimal_places=2)
 
     status = models.CharField(

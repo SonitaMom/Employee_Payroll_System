@@ -9,6 +9,8 @@ from django.utils import timezone
 from datetime import date
 from calendar import monthrange
 
+from main.services.dashboard import get_recent_activities
+
 
 def home(request):
     if request.user.is_authenticated:
@@ -37,13 +39,12 @@ def login_view(request):
 
     return render(request, "login.html")
 
-
 def logout_view(request):
     logout(request)
     return redirect("login")
 
 
-from main.services.dashboard import get_recent_activities
+
 
 
 @login_required
@@ -159,12 +160,6 @@ def position_test(request):
     })
 
 
-@login_required
-@permission_required("main.view_attendance", raise_exception=True)
-def attendance_test(request):
-    return render(request, "attendance/test.html", {
-        "title": "test"
-    })
 
 
 @login_required
@@ -252,10 +247,34 @@ def attendance_record(request):
 
 @login_required
 @permission_required("main.view_payroll", raise_exception=True)
-def payroll_test(request):
-    return render(request, "payroll/test.html", {
-        "title": "test"
+def payroll(request):
+    return render(request, "payroll/payroll.html", {
+        "title": "Payroll"
     })
+
+
+
+
+
+
+
+@login_required
+@permission_required("main.add_payroll", raise_exception=True)
+def new_payroll(request):
+    pass
+
+
+
+
+
+@login_required
+@permission_required("main.update_payroll", raise_exception=True)
+def update_payroll(request, payroll_id):
+    pass
+
+
+
+
 
 
 @login_required
@@ -276,9 +295,9 @@ def payslips_test(request):
 
 @login_required
 @permission_required("main.view_report", raise_exception=True)
-def reports_test(request):
-    return render(request, "reports/test.html", {
-        "title": "test"
+def reports(request):
+    return render(request, "reports.html", {
+        "title": "Reports"
     })
 
 
