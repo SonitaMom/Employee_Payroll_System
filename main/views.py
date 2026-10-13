@@ -1,6 +1,6 @@
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required, permission_required
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from .models import *
 from django.db.models import Sum, Count, Q
 from django.db.models.functions import TruncMonth
@@ -8,6 +8,15 @@ from django.utils import timezone
 
 from datetime import date
 from calendar import monthrange
+
+from main.services.dashboard import get_recent_activities
+
+from .forms import AttendanceForm, AttendanceEditForm
+from django.core.paginator import Paginator
+from django.utils.http import url_has_allowed_host_and_scheme
+from django.views.decorators.http import require_POST
+from django.contrib import messages
+
 
 
 def home(request):
@@ -37,13 +46,12 @@ def login_view(request):
 
     return render(request, "login.html")
 
-
 def logout_view(request):
     logout(request)
     return redirect("login")
 
 
-from main.services.dashboard import get_recent_activities
+
 
 
 @login_required
@@ -159,13 +167,84 @@ def position_test(request):
     })
 
 
+def employees_data():
+    return list(Employee.objects.values(
+        "employee_id", "first_name", "last_name", "department_id"
+    ))
+
+
 @login_required
 @permission_required("main.view_attendance", raise_exception=True)
 def attendance_test(request):
+    today=timezone.localdate().isoformat()
+    start = request.GET.get("start", today)
+    end = request.GET.get("end", today)
+    dept = request.GET.get("dept", "")
+    status = request.GET.get("status", "")
+    dept_id = int(dept) if dept.isdigit() else None
+
+    qs = (Attendance.objects.select_related("employee__department")
+          .filter(date__range=[start, end]))
+    if dept:
+        qs=qs.filter(employee__department_id=dept)
+    if status:
+        qs = qs.filter(status=status)
+    qs = qs.order_by("-date", "-pk")
+
+    page=Paginator(qs, 10).get_page(request.GET.get("page"))
+
+    total = page.paginator.count
+    offset = page.start_index()-1 if total else 0
+    for i, a in enumerate(page):
+        a.row_no =total-offset-i
+
     return render(request, "attendance/test.html", {
-        "title": "test"
+        "title": "Attendance",
+        "page" : page,
+        "departments" : Department.objects.all(),
+        "dept_id" : dept_id,
+        "statuses": Attendance.StatusChoices.choices,
+        "start": start, "end":end, "dept":dept, "status":status,
+        "employees": employees_data(),
     })
 
+
+
+def _back(request):
+    """Return to the page the user came from (keeps filters and page)."""
+    nxt = request.POST.get("next", "")
+    if nxt and url_has_allowed_host_and_scheme(nxt, allowed_hosts={request.get_host()}):
+        return redirect(nxt)
+    return redirect("attendance_test")
+
+def attendance_add(request):
+    form = AttendanceForm(request.POST)
+    if not form.is_valid():
+        messages.error(request, "Please choose a department and an employee.")
+        return _back(request)
+
+    obj = form.save(commit=False)
+    posted_dept = request.POST.get("department")
+    if posted_dept and str(obj.employee.department_id) != posted_dept:
+        messages.error(request, "That employee is not in the selected department.")
+    elif Attendance.objects.filter(employee=obj.employee,
+                                   date=timezone.localdate()).exists():
+        messages.error(request, "This employee already has a record today.")
+    else:
+        obj.save()
+        messages.success(request, "Attendance added.")
+    return _back(request)
+
+
+def attendance_edit(request, pk):
+    obj  = get_object_or_404(Attendance, pk=pk)
+    form = AttendanceEditForm(request.POST, instance=obj)
+    if form.is_valid():
+        form.save()                      # model.save() recalculates OT
+        messages.success(request, "Attendance updated.")
+    else:
+        messages.error(request, "Could not save. Please check the times.")
+    return _back(request)
 
 @login_required
 @permission_required("main.view_attendance", raise_exception=True)
@@ -252,10 +331,34 @@ def attendance_record(request):
 
 @login_required
 @permission_required("main.view_payroll", raise_exception=True)
-def payroll_test(request):
-    return render(request, "payroll/test.html", {
-        "title": "test"
+def payroll(request):
+    return render(request, "payroll/payroll.html", {
+        "title": "Payroll"
     })
+
+
+
+
+
+
+
+@login_required
+@permission_required("main.add_payroll", raise_exception=True)
+def new_payroll(request):
+    pass
+
+
+
+
+
+@login_required
+@permission_required("main.update_payroll", raise_exception=True)
+def update_payroll(request, payroll_id):
+    pass
+
+
+
+
 
 
 @login_required
@@ -276,17 +379,17 @@ def payslips_test(request):
 
 @login_required
 @permission_required("main.view_report", raise_exception=True)
-def reports_test(request):
-    return render(request, "reports/test.html", {
-        "title": "test"
+def reports(request):
+    return render(request, "reports.html", {
+        "title": "Reports"
     })
 
 
 @login_required
 @permission_required("main.view_setting", raise_exception=True)
-def settings_test(request):
-    return render(request, "settings/test.html", {
-        "title": "test"
+def settings(request):
+    return render(request, "settings.html", {
+        "title": "Settings"
     })
 
 

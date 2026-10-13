@@ -1,5 +1,9 @@
 from django.core.validators import MinValueValidator
-from django.db import models
+from django.db import models 
+from django.utils import timezone
+from datetime import datetime, time
+
+work_end = time(17,0) # OT starts after this time
 
 
 class Department(models.Model):
@@ -63,6 +67,9 @@ class Employee(models.Model):
     )
     created_at = models.DateTimeField(auto_now_add=True)
 
+    @property
+    def full_name(self):
+        return f"{self.first_name} {self.last_name}"
     def __str__(self):
         return f"{self.employee_id} - {self.first_name} {self.last_name}"
 
@@ -78,7 +85,7 @@ class Attendance(models.Model):
         Employee, on_delete=models.CASCADE, related_name="attendances"
     )
 
-    date = models.DateField()
+    date = models.DateField(default=timezone.localdate) # today date and time
     check_in = models.TimeField(blank=True, null=True)
     check_out = models.TimeField(blank=True, null=True)
 
@@ -87,7 +94,7 @@ class Attendance(models.Model):
         choices=StatusChoices.choices,
         default=StatusChoices.PRESENT,
     )
-    ot_hours = models.DecimalField(max_digits=5, decimal_places=2, default=0.00)
+    ot_hours = models.DecimalField(max_digits=5, decimal_places=2, default=0.00, editable=False)
 
     note = models.TextField(blank=True, null=True)
 
@@ -97,7 +104,26 @@ class Attendance(models.Model):
                 fields=["employee", "date"], name="unique_employee_attendance_date"
             )
         ]
+        ordering = ["-date", "employee__first_name", "employee__last_name"]
 
+    def save(self, *args, **kwargs):
+        if self.status == "Absent":
+            self.check_in = self.check_out = None
+        self.ot_hours = self.calc_ot()
+        super().save(* args, **kwargs)
+
+    #OT calculated
+    def calc_ot(self):
+        if not self.check_out:
+            return 0
+        end = datetime.combine(self.date, work_end)
+        out = datetime.combine(self.date, self.check_out)
+        return round(max((out-end).total_seconds()/3600, 0),1)
+
+    #Set the color of each status
+    @property
+    def badge(self):
+        return {"Present": "success", "Leave": "warning", "Absent" : "danger"}[self.status]
     def __str__(self):
         return f"{self.employee_id} - {self.date} ({self.status})"
 
@@ -115,13 +141,8 @@ class Payroll(models.Model):
 
     pay_period = models.DateField()
 
-    # Salary snapshot at the time payroll is created
     basic_salary = models.DecimalField(max_digits=12, decimal_places=2)
-
-    # Money calculated from overtime
     ot_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
-
-    # Final salary after bonuses, allowances, deductions, and tax
     net_salary = models.DecimalField(max_digits=12, decimal_places=2)
 
     status = models.CharField(
