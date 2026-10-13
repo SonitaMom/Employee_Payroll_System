@@ -6,9 +6,8 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required, permission_required
 from django.shortcuts import render, redirect
 from .models import Employee
-
-
-
+#anna task
+from .models import Employee, Department, Position, Payroll
 def home(request):
     if request.user.is_authenticated:
         return redirect("dashboard")
@@ -137,3 +136,91 @@ def test(request):
     })
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#Anna tasks
+from django.shortcuts import render, redirect
+from django.db.models import Sum, Count
+from django.contrib import messages
+from .models import Employee, Department, Position, Payroll
+
+# 1. EMPLOYEES VIEW (Handles Listing & Modal Creation)
+def employee_list(request):
+    if request.method == "POST":
+        Employee.objects.create(
+            first_name=request.POST.get('first_name'),
+            last_name=request.POST.get('last_name'),
+            department_id=request.POST.get('department'),
+            position_id=request.POST.get('position'),
+            hire_date=request.POST.get('hire_date'),
+            sex=request.POST.get('sex'),
+            phone=request.POST.get('phone'),
+            email=request.POST.get('email'),
+            status="Active"
+        )
+        messages.success(request, "Employee profile successfully saved to database!")
+        return redirect('employee_list')
+        
+    context = {
+        'employees': Employee.objects.select_related('department', 'position').all(),
+        'departments': Department.objects.all(),
+        'positions': Position.objects.all(),
+    }
+    return render(request, 'employees/test.html', context)
+
+# 2. DEPARTMENTS VIEW (Handles Grid Display & Quick Save)
+def department_list(request):
+    if request.method == "POST":
+        name = request.POST.get('name')
+        description = request.POST.get('description')
+        Department.objects.create(name=name, description=description)
+        messages.success(request, f"Department '{name}' added successfully.")
+        return redirect('department_list')
+        
+    departments = Department.objects.annotate(emp_count=Count('employees')).all()
+    return render(request, 'departments/test.html', {'departments': departments})
+
+# 3. POSITIONS VIEW (Handles Tiers, Salaries & OT calculation mapping)
+def position_list(request):
+    if request.method == "POST":
+        name = request.POST.get('name')
+        basic_salary = request.POST.get('basic_salary')
+        ot_rate = request.POST.get('ot_rate')
+        description = request.POST.get('description')
+        Position.objects.create(name=name, basic_salary=basic_salary, ot_rate=ot_rate, description=description)
+        messages.success(request, f"Job tier position '{name}' successfully updated.")
+        return redirect('position_list')
+        
+    positions = Position.objects.all()
+    return render(request, 'positions/test.html', {'positions': positions})
+
+# 4. PAYSLIPS VIEW (Renders the itemized payout blocks)
+def payslip_list(request):
+    payrolls = Payroll.objects.select_related('employee', 'employee__position', 'employee__department').prefetch_related('items').all()
+    return render(request, 'payslips/test.html', {'payrolls': payrolls})
+
+# 5. REPORTS VIEW (Compiles active database aggregates for your dashboard graphics)
+def report_dashboard(request):
+    context = {
+        'total_employees': Employee.objects.count(),
+        'total_departments': Department.objects.count(),
+        'total_positions': Position.objects.count(),
+        'total_payroll_exp': Payroll.objects.aggregate(Sum('net_salary'))['net_salary__sum'] or 0.00
+    }
+    return render(request, 'reports/test.html', context)

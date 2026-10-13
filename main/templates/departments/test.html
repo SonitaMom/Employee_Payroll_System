@@ -1,5 +1,105 @@
 {% extends 'base.html' %}
-
 {% block content %}
-<h1>{{ "Hello" }}</h1>
+<div class="container-fluid p-4 text-dark">
+
+    <!-- Page header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="mb-0 fw-bold">Departments</h4>
+            <small class="text-muted">Home / Departments</small>
+        </div>
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addDeptModal">+ Add Department</button>
+    </div>
+
+    <!-- Search -->
+    <div class="card shadow-sm border-0 bg-white mb-3">
+        <div class="card-body">
+            <div class="row g-2 align-items-center">
+                <div class="col-md-6">
+                    <input type="text" id="deptSearch" class="form-control" placeholder="Search department...">
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <small class="text-muted"><span id="deptCount">{{ departments|length }}</span> departments</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Department cards -->
+    <div class="row g-3" id="deptGrid">
+        {% for d in departments %}
+        <div class="col-md-6 col-xl-4 dept-item">
+            <div class="card shadow-sm border-0 bg-white h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <h5 class="fw-bold mb-0 dept-name">{{ d.name }}</h5>
+                        <span class="badge bg-primary-subtle text-primary rounded-pill px-3">
+                            {{ d.emp_count }} employee{{ d.emp_count|pluralize }}
+                        </span>
+                    </div>
+                    <p class="text-muted small mb-0">{{ d.description|default:"No description." }}</p>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="card shadow-sm border-0 bg-white">
+                <div class="card-body text-center py-5 text-muted">No departments found.</div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    <div id="deptNoMatch" class="text-center text-muted py-4" style="display:none;">No matching departments.</div>
+</div>
+
+<!-- Add Department Modal -->
+<div class="modal fade" id="addDeptModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content bg-white text-dark">
+            <div class="modal-header bg-light">
+                <h5 class="modal-title fw-bold">Add Department</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="POST">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="small fw-bold">Department Name *</label>
+                        <input type="text" name="name" class="form-control" placeholder="e.g. IT, Finance, HR" maxlength="100" required>
+                    </div>
+                    <div>
+                        <label class="small fw-bold">Description</label>
+                        <textarea name="description" class="form-control" rows="3" placeholder="Short description (optional)"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Department</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Client-side search
+    (function () {
+        const search = document.getElementById('deptSearch');
+        const items = document.querySelectorAll('.dept-item');
+        const count = document.getElementById('deptCount');
+        const noMatch = document.getElementById('deptNoMatch');
+
+        search.addEventListener('input', function () {
+            const q = search.value.trim().toLowerCase();
+            let visible = 0;
+            items.forEach(function (item) {
+                const show = item.textContent.toLowerCase().includes(q);
+                item.style.display = show ? '' : 'none';
+                if (show) visible++;
+            });
+            count.textContent = visible;
+            if (items.length) noMatch.style.display = visible ? 'none' : '';
+        });
+    })();
+</script>
 {% endblock %}

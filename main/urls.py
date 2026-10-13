@@ -39,4 +39,14 @@ urlpatterns = [
 
     #test
     path("test/", views.test, name="test"),
+
+
+    # anna tasks
+    # ... Keep any existing login/dashboard rules your team built ...
+    path('employees/', views.employee_list, name='employee_list'),
+    path('departments/', views.department_list, name='department_list'),
+    path('positions/', views.position_list, name='position_list'),
+    path('payslips/', views.payslip_list, name='payslip_list'),
+    path('reports/', views.report_dashboard, name='report_dashboard'),
+
 ]

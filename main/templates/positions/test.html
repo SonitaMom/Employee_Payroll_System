@@ -1,5 +1,120 @@
 {% extends 'base.html' %}
-
 {% block content %}
-<h1>{{ "Hello" }}</h1>
+<div class="container-fluid p-4 text-dark">
+
+    <!-- Page header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="mb-0 fw-bold">Positions</h4>
+            <small class="text-muted">Home / Positions</small>
+        </div>
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addPosModal">+ Add Position</button>
+    </div>
+
+    <!-- Search -->
+    <div class="card shadow-sm border-0 bg-white mb-3">
+        <div class="card-body">
+            <div class="row g-2 align-items-center">
+                <div class="col-md-6">
+                    <input type="text" id="posSearch" class="form-control" placeholder="Search position...">
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <small class="text-muted"><span id="posCount">{{ positions|length }}</span> positions</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Table -->
+    <div class="card shadow-sm border-0 bg-white">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0" id="posTable">
+                <thead class="bg-light text-secondary small fw-bold">
+                    <tr>
+                        <th>#</th>
+                        <th>Position</th>
+                        <th>Basic Salary</th>
+                        <th>OT Rate (per hour)</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for p in positions %}
+                    <tr class="pos-row">
+                        <td>{{ forloop.counter }}</td>
+                        <td><strong>{{ p.name }}</strong></td>
+                        <td>${{ p.basic_salary|floatformat:2 }}</td>
+                        <td>${{ p.ot_rate|floatformat:2 }}</td>
+                        <td class="text-muted small">{{ p.description|default:"-" }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="5" class="text-center py-4 text-muted">No positions found.</td></tr>
+                    {% endfor %}
+                    <tr id="posNoMatch" style="display:none;"><td colspan="5" class="text-center py-4 text-muted">No matching positions.</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Add Position Modal -->
+<div class="modal fade" id="addPosModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content bg-white text-dark">
+            <div class="modal-header bg-light">
+                <h5 class="modal-title fw-bold">Add Position</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="POST">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label class="small fw-bold">Position Name *</label>
+                            <input type="text" name="name" class="form-control" placeholder="e.g. Developer" maxlength="100" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="small fw-bold">Basic Salary ($) *</label>
+                            <input type="number" name="basic_salary" class="form-control" min="0" step="0.01" placeholder="0.00" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="small fw-bold">OT Rate ($/hour) *</label>
+                            <input type="number" name="ot_rate" class="form-control" min="0" step="0.01" placeholder="0.00" required>
+                        </div>
+                        <div class="col-12">
+                            <label class="small fw-bold">Description</label>
+                            <textarea name="description" class="form-control" rows="3" placeholder="Short description (optional)"></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Position</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Client-side search
+    (function () {
+        const search = document.getElementById('posSearch');
+        const rows = document.querySelectorAll('#posTable .pos-row');
+        const count = document.getElementById('posCount');
+        const noMatch = document.getElementById('posNoMatch');
+
+        search.addEventListener('input', function () {
+            const q = search.value.trim().toLowerCase();
+            let visible = 0;
+            rows.forEach(function (row) {
+                const show = row.textContent.toLowerCase().includes(q);
+                row.style.display = show ? '' : 'none';
+                if (show) visible++;
+            });
+            count.textContent = visible;
+            if (rows.length) noMatch.style.display = visible ? 'none' : '';
+        });
+    })();
+</script>
 {% endblock %}
