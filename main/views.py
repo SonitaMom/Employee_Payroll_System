@@ -175,7 +175,7 @@ def employees_data():
 
 @login_required
 @permission_required("main.view_attendance", raise_exception=True)
-def attendance_test(request):
+def attendance(request):
     today=timezone.localdate().isoformat()
     start = request.GET.get("start", today)
     end = request.GET.get("end", today)
@@ -198,7 +198,7 @@ def attendance_test(request):
     for i, a in enumerate(page):
         a.row_no =total-offset-i
 
-    return render(request, "attendance/test.html", {
+    return render(request, "attendance/attendance.html", {
         "title": "Attendance",
         "page" : page,
         "departments" : Department.objects.all(),
@@ -215,7 +215,7 @@ def _back(request):
     nxt = request.POST.get("next", "")
     if nxt and url_has_allowed_host_and_scheme(nxt, allowed_hosts={request.get_host()}):
         return redirect(nxt)
-    return redirect("attendance_test")
+    return redirect("attendance")
 
 def attendance_add(request):
     form = AttendanceForm(request.POST)
@@ -240,7 +240,7 @@ def attendance_edit(request, pk):
     obj  = get_object_or_404(Attendance, pk=pk)
     form = AttendanceEditForm(request.POST, instance=obj)
     if form.is_valid():
-        form.save()                      # model.save() recalculates OT
+        form.save()       
         messages.success(request, "Attendance updated.")
     else:
         messages.error(request, "Could not save. Please check the times.")

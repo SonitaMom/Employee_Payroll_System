@@ -18,7 +18,7 @@ urlpatterns = [
 
     path("positions/test/", views.position_test, name="position_test"),
 
-    path("attendance/test/", views.attendance_test, name="attendance_test"),
+    path("attendance/", views.attendance, name="attendance"),
     path("attendance/record/", views.attendance_record, name="attendance_record"),
     path("attendance/add/", views.attendance_add, name="attendance_add"),
     path("attendance/<int:pk>/edit/", views.attendance_edit, name="attendance_edit"),
