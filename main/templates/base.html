@@ -155,31 +155,18 @@
             </ul>
           </li>
 
+          
+
           <li class="nav-item">
             <a
-              href="#payrollSubmenu"
-              class="nav-link-custom nav-dropdown-toggle"
-              data-bs-toggle="collapse"
-              role="button"
-              aria-expanded="false"
-              aria-controls="payrollSubmenu"
+              href="{% url 'payroll' %}"
+              class="nav-link-custom {% block nav_payroll %}active{% endblock %}"
             >
               <i class="bi bi-cash-stack"></i>
               <span>Payroll</span>
-              <i class="bi bi-chevron-down ms-auto"></i>
             </a>
-            <ul
-              class="collapse list-unstyled sidebar-submenu"
-              id="payrollSubmenu"
-            >
-              <li>
-                <a href="{% url 'payroll_test' %}" class="nav-link-custom">
-                  <i class="bi bi-briefcase-fill"></i>
-                  <span>Test</span>
-                </a>
-              </li>
-            </ul>
           </li>
+
           <li class="nav-item">
             <a
               href="#paymentSubmenu"
@@ -234,54 +221,22 @@
 
           <li class="nav-item">
             <a
-              href="#reportSubmenu"
-              class="nav-link-custom nav-dropdown-toggle"
-              data-bs-toggle="collapse"
-              role="button"
-              aria-expanded="false"
-              aria-controls="reportSubmenu"
+              href="{% url 'reports' %}"
+              class="nav-link-custom {% block nav_reports %}active{% endblock %}"
             >
               <i class="bi bi-file-earmark-bar-graph-fill"></i>
               <span>Reports</span>
-              <i class="bi bi-chevron-down ms-auto"></i>
             </a>
-            <ul
-              class="collapse list-unstyled sidebar-submenu"
-              id="reportSubmenu"
-            >
-              <li>
-                <a href="{% url 'reports_test' %}" class="nav-link-custom">
-                  <i class="bi bi-file-earmark-bar-graph-fill"></i>
-                  <span>Test</span>
-                </a>
-              </li>
-            </ul>
           </li>
-
+          
           <li class="nav-item">
             <a
-              href="#settingSubmenu"
-              class="nav-link-custom nav-dropdown-toggle"
-              data-bs-toggle="collapse"
-              role="button"
-              aria-expanded="false"
-              aria-controls="settingSubmenu"
+              href="{% url 'settings' %}"
+              class="nav-link-custom {% block nav_settings %}active{% endblock %}"
             >
               <i class="bi bi-gear-fill"></i>
               <span>Settings</span>
-              <i class="bi bi-chevron-down ms-auto"></i>
             </a>
-            <ul
-              class="collapse list-unstyled sidebar-submenu"
-              id="settingSubmenu"
-            >
-              <li>
-                <a href="{% url 'settings_test' %}" class="nav-link-custom">
-                  <i class="bi bi-gear-fill"></i>
-                  <span>Test</span>
-                </a>
-              </li>
-            </ul>
           </li>
 
           <li class="nav-item">

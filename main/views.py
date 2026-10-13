@@ -9,6 +9,8 @@ from django.utils import timezone
 from datetime import date
 from calendar import monthrange
 
+from main.services.dashboard import get_recent_activities
+
 from .forms import AttendanceForm, AttendanceEditForm
 from django.core.paginator import Paginator
 from django.utils.http import url_has_allowed_host_and_scheme
@@ -385,9 +387,9 @@ def reports(request):
 
 @login_required
 @permission_required("main.view_setting", raise_exception=True)
-def settings_test(request):
-    return render(request, "settings/test.html", {
-        "title": "test"
+def settings(request):
+    return render(request, "settings.html", {
+        "title": "Settings"
     })
 
 

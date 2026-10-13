@@ -18,7 +18,7 @@ urlpatterns = [
 
     path("positions/test/", views.position_test, name="position_test"),
 
-
+    path("attendance/test/", views.attendance_test, name="attendance_test"),
     path("attendance/record/", views.attendance_record, name="attendance_record"),
     path("attendance/add/", views.attendance_add, name="attendance_add"),
     path("attendance/<int:pk>/edit/", views.attendance_edit, name="attendance_edit"),
@@ -37,7 +37,7 @@ urlpatterns = [
     path("reports/", views.reports, name="reports"),
 
 
-    path("settings/test/", views.settings_test, name="settings_test"),
+    path("settings/", views.settings, name="settings"),
 
 
     #test
