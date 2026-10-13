@@ -1,0 +1,158 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Payroll | PayPro{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/payroll.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-3 py-2">
+
+    <!-- Top Action Toolbar -->
+    <div class="d-flex justify-content-end mb-3">
+        <a href="{% url 'new_payroll' %}" class="btn btn-primary-custom d-inline-flex align-items-center gap-2">
+            <i class="bi bi-plus-lg"></i>
+            <span>Add Payroll</span>
+        </a>
+    </div>
+
+    <!-- Feedback messages -->
+    {% if messages %}
+    <div class="mb-3">
+        {% for m in messages %}
+        <div class="alert alert-{% if m.tags == 'error' %}danger{% else %}{{ m.tags }}{% endif %} alert-dismissible fade show" role="alert">
+            {{ m }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Filter & Search Toolbar -->
+    <div class="payroll-toolbar mb-4">
+        <form method="get" action="{% url 'payroll' %}" class="row g-2 align-items-end">
+
+            <div class="col-12 col-sm-6 col-md-3">
+                <label for="month" class="form-label small fw-semibold text-muted mb-1">Month</label>
+                <select name="month" id="month" class="form-select">
+                    {% for value, name in months %}
+                    <option value="{{ value }}" {% if month == value %}selected{% endif %}>
+                        {{ name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="col-12 col-sm-6 col-md-2">
+                <label for="year" class="form-label small fw-semibold text-muted mb-1">Year</label>
+                <input type="number" name="year" id="year" class="form-control" value="{{ year }}" min="2000" max="2100" required>
+            </div>
+
+            <div class="col-12 col-sm-8 col-md-5">
+                <label for="search" class="form-label small fw-semibold text-muted mb-1">Search Employee</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-white border-end-0 text-muted">
+                        <i class="bi bi-search"></i>
+                    </span>
+                    <input type="search" name="search" id="search" class="form-control border-start-0" placeholder="Search by name or ID..." value="{{ search }}">
+                </div>
+            </div>
+
+            <div class="col-12 col-sm-4 col-md-2 d-flex gap-2">
+                <button type="submit" class="btn btn-primary-custom w-100">
+                    Filter
+                </button>
+                {% if search or month or year %}
+                <a href="{% url 'payroll' %}" class="btn btn-outline-secondary" title="Reset filter">
+                    <i class="bi bi-arrow-counterclockwise"></i>
+                </a>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+
+    <!-- Payroll Table Card -->
+    <div class="payroll-card">
+        <div class="payroll-card-header">
+            <h5>
+                <i class="bi bi-cash-stack text-primary"></i>
+                <span>Payroll Records</span>
+            </h5>
+            <span class="badge rounded-pill bg-light text-muted border px-3 py-2">
+                {{ payrolls|length }} record{{ payrolls|length|pluralize }}
+            </span>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table payroll-table align-middle">
+                <thead>
+                    <tr>
+                        <th style="width: 60px;">No.</th>
+                        <th>Employee Name</th>
+                        <th>Salary</th>
+                        <th>Pay Period</th>
+                        <th>Net Salary</th>
+                        <th>Status</th>
+                        <th class="text-center" style="width: 90px;">Action</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for payroll in payrolls %}
+                    <tr>
+                        <td class="text-muted fw-semibold">{{ forloop.counter }}</td>
+                        <td>
+                            <div class="fw-semibold text-dark">
+                                {{ payroll.employee.first_name }} {{ payroll.employee.last_name }}
+                            </div>
+                            <span class="text-muted small">#{{ payroll.employee.employee_id }} &bull; {{ payroll.employee.position.name }}</span>
+                        </td>
+                        <td class="fw-medium">${{ payroll.basic_salary|floatformat:2 }}</td>
+                        <td class="text-secondary">{{ payroll.pay_period|date:"F Y" }}</td>
+                        <td>
+                            <span class="fw-bold text-primary">${{ payroll.net_salary|floatformat:2 }}</span>
+                        </td>
+                        <td>
+                            {% if payroll.status == "Approved" %}
+                            <span class="badge-status badge-approved">
+                                <i class="bi bi-check-circle-fill"></i> Approved
+                            </span>
+                            {% elif payroll.status == "Paid" %}
+                            <span class="badge-status badge-paid">
+                                <i class="bi bi-wallet2"></i> Paid
+                            </span>
+                            {% else %}
+                            <span class="badge-status badge-draft">
+                                <i class="bi bi-file-earmark"></i> Draft
+                            </span>
+                            {% endif %}
+                        </td>
+                        <td class="text-center">
+                            <a href="{% url 'update_payroll' payroll.payroll_id %}" class="btn btn-sm btn-outline-primary" title="Edit payroll">
+                                <i class="bi bi-pencil-square"></i>
+                                <span class="d-none d-md-inline ms-1">Edit</span>
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center py-5 text-muted">
+                            <i class="bi bi-folder2-open display-6 d-block mb-2 text-secondary opacity-50"></i>
+                            <div class="fw-semibold">No payroll records found for this period.</div>
+                            <small class="text-muted">Try choosing another month or create a new payroll record.</small>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/payroll.js' %}"></script>
+{% endblock %}

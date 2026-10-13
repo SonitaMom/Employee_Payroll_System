@@ -1,0 +1,172 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Attendance | PayPro{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/attendance.css' %}" />
+{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center justify-content-between attendance-head mx-3">
+  <div>
+    <h1 class="m-0">Attendance</h1>
+    <p class="mt-2">Staff attendance.</p>
+  </div>
+  <button type="button" class="btn btn-primary" id="btnAdd">+ Add Attendance</button>
+</div>
+
+{% if messages %}
+{% for m in messages %}
+<div class="alert alert-{% if m.tags == 'error' %}danger{% else %}{{ m.tags }}{% endif %} mx-3">{{ m }}</div>
+{% endfor %}
+{% endif %}
+
+<div class="attendance-table my-3 p-3">
+  <form method="get" class="row g-3 mb-3">
+    <div class="col-3"><input type="date" name="start" value="{{ start }}" class="form-control" /></div>
+    <div class="col-3"><input type="date" name="end" value="{{ end }}" class="form-control" /></div>
+    <div class="col-2">
+      <select name="dept" class="form-select">
+        <option value="">All Departments</option>
+        {% for d in departments %}
+        <option value="{{ d.pk }}" {% if d.pk == dept_id %}selected{% endif %}>{{ d.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-2">
+      <select name="status" class="form-select">
+        <option value="">All status</option>
+        {% for value, label in statuses %}
+        <option value="{{ value }}" {% if status == value %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-2"><button class="btn btn-primary">Filter</button></div>
+  </form>
+
+  <div class="table-responsive mt-3">
+    <table class="table align-middle mb-0">
+      <thead class="table-secondary ">
+        <tr class="text-center">
+          <th>#</th>
+          <th>Date</th>
+          <th>Employee's name</th>
+          <th>Department</th>
+          <th>Check-in</th>
+          <th>Check-out</th>
+          <th>OT (hrs)</th>
+          <th>Status</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for a in page %}
+        <tr class="text-center">
+          <td>{{ a.row_no }}</td>
+          <td>{{ a.date|date:"d/m/Y" }}</td>
+          <td>{{ a.employee.full_name }}</td>
+          <td>{{ a.employee.department }}</td>
+          <td>{{ a.check_in|time:"H:i"|default:"-" }}</td>
+          <td>{{ a.check_out|time:"H:i"|default:"-" }}</td>
+          <td>{{ a.ot_hours }}</td>
+          <td><span class="badge text-bg-{{ a.badge }}">{{ a.status }}</span></td>
+          <td>
+            <button type="button" class="btn btn-sm btn-outline-primary" data-edit
+              data-url="{% url 'attendance_edit' a.pk %}" data-date="{{ a.date|date:'d/m/Y' }}"
+              data-dept="{{ a.employee.department_id }}" data-emp="{{ a.employee.pk }}"
+              data-cin="{{ a.check_in|time:'H:i' }}" data-cout="{{ a.check_out|time:'H:i' }}"
+              data-status="{{ a.status }}">Edit</button>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="9" class="text-center text-muted">No data</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <nav class="mt-3">
+    <ul class="pagination justify-content-end">
+      {% if page.has_previous %}
+      <li class="page-item"><a class="page-link"
+          href="?page={{ page.previous_page_number }}&start={{ start }}&end={{ end }}&dept={{ dept }}&status={{ status }}">Previous</a>
+      </li>
+      {% endif %}
+      <li class="page-item active"><span class="page-link">{{ page.number }}/{{ page.paginator.num_pages }}</span></li>
+      {% if page.has_next %}
+      <li class="page-item"><a class="page-link"
+          href="?page={{ page.next_page_number }}&start={{ start }}&end={{ end }}&dept={{ dept }}&status={{ status }}">Next</a>
+      </li>
+      {% endif %}
+    </ul>
+  </nav>
+</div>
+
+<!-- Add / Edit popup (outside the table card) -->
+<div class="att-modal" id="attModal" data-add-url="{% url 'attendance_add' %}" data-today="{% now 'd/m/Y' %}">
+  <div class="att-box">
+    <h4 id="m_title" class="mb-1">Add Attendance</h4>
+    <p class="text-muted small mb-3">Date: <b id="m_date"></b> <span id="m_auto">(automatic)</span></p>
+
+    <form method="post" id="attForm">
+      {% csrf_token %}
+      <input type="hidden" name="next" value="{{ request.get_full_path }}">
+
+      <div class="mb-3">
+        <label class="form-label">Department</label>
+        <select name="department" id="m_dept" class="form-select">
+          <option value="">Select department</option>
+          {% for d in departments %}
+          <option value="{{ d.pk }}">{{ d.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label">Employee</label>
+        <select name="employee" id="m_emp" class="form-select" required></select>
+
+      </div>
+
+      <div class="row mb-3">
+        <div class="col">
+          <label class="form-label">Check-in</label>
+          <div class="input-group">
+            <input type="time" name="check_in" id="m_in" class="form-control">
+            <button type="button" class="btn btn-outline-secondary" data-now="m_in">Now</button>
+          </div>
+        </div>
+        <div class="col">
+          <label class="form-label">Check-out</label>
+          <div class="input-group">
+            <input type="time" name="check_out" id="m_out" class="form-control">
+            <button type="button" class="btn btn-outline-secondary" data-now="m_out">Now</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label">Status</label>
+        <select name="status" id="m_status" class="form-select">
+          {% for value, label in statuses %}
+          <option value="{{ value }}">{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <p class="text-muted small">OT is calculated automatically after 17:00. Check-in after 08:15 suggests Late.</p>
+
+      <button class="btn btn-primary">Save</button>
+      <button type="button" class="btn btn-link" id="m_cancel">Cancel</button>
+    </form>
+  </div>
+</div>
+
+{{ employees|json_script:"employees-data" }}
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/attendance/add.js' %}"></script>
+{% endblock %}
