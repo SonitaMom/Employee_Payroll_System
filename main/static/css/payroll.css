@@ -1,0 +1,209 @@
+/* ==========================================================================
+   Payroll Module CSS (payroll.css)
+   Clean, modern dashboard-aligned styling matching root.css
+   ========================================================================== */
+
+/* Page Header & Actions */
+.payroll-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 24px;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.payroll-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--primary-text);
+    margin: 0;
+    letter-spacing: -0.02em;
+}
+
+.payroll-subtitle {
+    font-size: 0.88rem;
+    color: var(--muted-text);
+    margin: 4px 0 0 0;
+}
+
+/* Card Wrappers */
+.payroll-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-md);
+    box-shadow: var(--box-shadow-card);
+    transition: box-shadow 0.2s ease;
+    margin-bottom: 24px;
+}
+
+.payroll-card-header {
+    padding: 18px 24px;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background-color: #FAFAFC;
+    border-top-left-radius: var(--border-radius-md);
+    border-top-right-radius: var(--border-radius-md);
+}
+
+.payroll-card-header h5 {
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: var(--primary-text);
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.payroll-card-body {
+    padding: 24px;
+}
+
+/* Filter Toolbar */
+.payroll-toolbar {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-md);
+    padding: 16px 20px;
+    box-shadow: var(--box-shadow-card);
+    margin-bottom: 20px;
+}
+
+/* Table Styling */
+.payroll-table {
+    margin-bottom: 0;
+}
+
+.payroll-table thead th {
+    background-color: #F8FAFC;
+    color: var(--muted-text);
+    font-size: 0.78rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 12px 18px;
+    border-bottom: 1px solid var(--border-color);
+    vertical-align: middle;
+}
+
+.payroll-table tbody td {
+    padding: 14px 18px;
+    vertical-align: middle;
+    font-size: 0.92rem;
+    color: var(--primary-text);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.payroll-table tbody tr:hover {
+    background-color: #F8FAFC;
+}
+
+/* Badge Pill Overrides */
+.badge-status {
+    padding: 5px 12px;
+    font-size: 0.76rem;
+    font-weight: 600;
+    border-radius: 20px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.badge-draft {
+    background-color: #F1F5F9;
+    color: var(--muted-text);
+    border: 1px solid #CBD5E1;
+}
+
+.badge-approved {
+    background-color: rgba(16, 185, 129, 0.12);
+    color: var(--success-green);
+    border: 1px solid rgba(16, 185, 129, 0.25);
+}
+
+.badge-paid {
+    background-color: rgba(0, 102, 255, 0.12);
+    color: var(--primary-blue);
+    border: 1px solid rgba(0, 102, 255, 0.25);
+}
+
+/* Form Read-only / Calculated Info Boxes */
+.computed-box {
+    background-color: #F8FAFC;
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    padding: 10px 14px;
+    display: flex;
+    flex-direction: column;
+}
+
+.computed-box .label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--muted-text);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-bottom: 2px;
+}
+
+.computed-box .value {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--primary-text);
+}
+
+.computed-box .value.highlight-net {
+    color: var(--primary-blue);
+}
+
+/* Items Table inside Form */
+.items-table thead th {
+    background-color: #F8FAFC;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--muted-text);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    padding: 10px 12px;
+}
+
+.items-table tbody td {
+    padding: 8px 10px;
+    vertical-align: middle;
+}
+
+.items-table .form-control,
+.items-table .form-select {
+    font-size: 0.88rem;
+    padding: 7px 10px;
+    border-radius: 8px;
+}
+
+.btn-delete-row {
+    color: var(--error-red);
+    background: transparent;
+    border: none;
+    padding: 6px 10px;
+    border-radius: 6px;
+    transition: background 0.15s ease, color 0.15s ease;
+}
+
+.btn-delete-row:hover {
+    background: rgba(239, 68, 68, 0.12);
+    color: #DC2626;
+}
+
+/* Form Action Buttons Bar */
+.form-actions-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-top: 24px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border-color);
+}

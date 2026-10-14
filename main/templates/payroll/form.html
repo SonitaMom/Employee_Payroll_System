@@ -1,0 +1,318 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}
+{% if payroll %}Update Payroll #{{ payroll.payroll_id }}{% else %}New Payroll{% endif %} | PayPro
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/payroll.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-3 py-2">
+
+    <!-- Top Status Indicator & Back Link (no redundant h1, title is in topbar) -->
+    <div class="d-flex align-items-center justify-content-between mb-3">
+        <a href="{% url 'payroll' %}" class="btn btn-sm btn-outline-secondary d-inline-flex align-items-center gap-1" title="Back to Payroll list">
+            <i class="bi bi-arrow-left"></i>
+            <span>Back to list</span>
+        </a>
+
+        <div>
+            {% if payroll %}
+                {% if payroll.status == "Approved" %}
+                <span class="badge-status badge-approved fs-6">
+                    <i class="bi bi-check-circle-fill"></i> Approved
+                </span>
+                {% elif payroll.status == "Paid" %}
+                <span class="badge-status badge-paid fs-6">
+                    <i class="bi bi-wallet2"></i> Paid
+                </span>
+                {% else %}
+                <span class="badge-status badge-draft fs-6">
+                    <i class="bi bi-file-earmark"></i> Draft
+                </span>
+                {% endif %}
+            {% else %}
+                <span class="badge-status badge-draft fs-6">
+                    <i class="bi bi-file-earmark"></i> Default: Draft
+                </span>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Django Message Alerts for errors & notifications -->
+    {% if messages %}
+    <div class="mb-3">
+        {% for m in messages %}
+        <div class="alert alert-{% if m.tags == 'error' %}danger{% else %}{{ m.tags }}{% endif %} alert-dismissible fade show" role="alert">
+            <i class="bi {% if m.tags == 'error' %}bi-exclamation-triangle-fill{% else %}bi-check-circle-fill{% endif %} me-2"></i>
+            {{ m }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <form method="POST" id="payrollForm">
+        {% csrf_token %}
+
+        <!-- SECTION 1: Payroll Information -->
+        <div class="payroll-card">
+            <div class="payroll-card-header">
+                <h5>
+                    <i class="bi bi-info-circle text-primary"></i>
+                    <span>Payroll Information</span>
+                </h5>
+                <span class="text-muted small">Employee & Period</span>
+            </div>
+
+            <div class="payroll-card-body">
+                <div class="row g-3">
+
+                    <!-- Employee (Read-only if already saved) -->
+                    <div class="col-12 col-md-6">
+                        <label for="id_employee" class="form-label fw-semibold text-secondary small">
+                            Employee <span class="text-danger">*</span>
+                        </label>
+                        {% if payroll %}
+                            <!-- Employee already saved: cannot be changed -->
+                            <input type="text" class="form-control bg-light fw-medium"
+                                value="{{ payroll.employee.full_name }} (#{{ payroll.employee.employee_id }} - {{ payroll.employee.position.name }})"
+                                readonly disabled>
+                            <!-- Hidden input to submit unchanged employee ID -->
+                            <input type="hidden" name="employee" value="{{ payroll.employee.pk }}">
+                            <small class="text-muted">Employee cannot be changed once payroll is created.</small>
+                        {% else %}
+                            {{ form.employee }}
+                            <small class="text-muted">Select an active employee to generate payroll.</small>
+                        {% endif %}
+                    </div>
+
+                    <!-- Pay Period (Editable, defaults to today's month) -->
+                    <div class="col-12 col-md-6">
+                        <label for="id_pay_period" class="form-label fw-semibold text-secondary small">
+                            Pay Period <span class="text-danger">*</span>
+                        </label>
+                        {{ form.pay_period }}
+                        <small class="text-muted">Month and year for this payroll cycle.</small>
+                    </div>
+
+                    <!-- Computed / Read-only Overview Boxes -->
+                    <div class="col-12 mt-4">
+                        <div class="row g-3">
+                            <div class="col-6 col-md-3">
+                                <div class="computed-box">
+                                    <span class="label">Basic Salary</span>
+                                    <span class="value" id="calc_basic_salary"
+                                        data-value="{{ payroll.basic_salary|default:0 }}">
+                                        ${{ payroll.basic_salary|floatformat:2|default:"0.00" }}
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div class="col-6 col-md-3">
+                                <div class="computed-box">
+                                    <span class="label">Overtime (OT)</span>
+                                    <span class="value" id="calc_ot_amount"
+                                        data-value="{{ payroll.ot_amount|default:0 }}">
+                                        ${{ payroll.ot_amount|floatformat:2|default:"0.00" }}
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div class="col-6 col-md-3">
+                                <div class="computed-box">
+                                    <span class="label">Status</span>
+                                    <span class="value" id="status_display">
+                                        {{ payroll.status|default:"Draft" }}
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div class="col-6 col-md-3">
+                                <div class="computed-box bg-primary-soft"
+                                    style="background-color: #EBF3FF; border-color: #BFDBFE;">
+                                    <span class="label text-primary">Estimated Net Salary</span>
+                                    <span class="value highlight-net" id="calc_net_salary">
+                                        ${{ payroll.net_salary|floatformat:2|default:"0.00" }}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- SECTION 2: Payroll Items List -->
+        <div class="payroll-card">
+            <div class="payroll-card-header">
+                <h5>
+                    <i class="bi bi-list-check text-primary"></i>
+                    <span>Payroll Items</span>
+                </h5>
+                <button type="button" class="btn btn-sm btn-primary-custom" id="btnAddItemRow">
+                    <i class="bi bi-plus-circle me-1"></i> Add Row
+                </button>
+            </div>
+
+            <div class="payroll-card-body p-0">
+                {{ formset.management_form }}
+
+                <div class="table-responsive">
+                    <table class="table items-table align-middle mb-0" id="payrollItemsTable">
+                        <thead>
+                            <tr>
+                                <th style="width: 25%;">Name</th>
+                                <th style="width: 20%;">Type</th>
+                                <th style="width: 20%;">Amount ($)</th>
+                                <th style="width: 30%;">Description</th>
+                                <th style="width: 5%;" class="text-center">Action</th>
+                            </tr>
+                        </thead>
+
+                        <tbody id="payrollItemsBody">
+                            {% for item_form in formset %}
+                            <tr class="item-row" data-index="{{ forloop.counter0 }}">
+                                {% for hidden in item_form.hidden_fields %}
+                                {{ hidden }}
+                                {% endfor %}
+
+                                <td>
+                                    {{ item_form.name }}
+                                </td>
+                                <td>
+                                    {{ item_form.type }}
+                                </td>
+                                <td>
+                                    {{ item_form.amount }}
+                                </td>
+                                <td>
+                                    {{ item_form.description }}
+                                </td>
+                                <td class="text-center">
+                                    <button type="button" class="btn-delete-row" title="Delete row">
+                                        <i class="bi bi-trash3-fill"></i>
+                                    </button>
+                                    <span class="d-none">
+                                        {{ item_form.DELETE }}
+                                    </span>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr class="empty-items-tr">
+                                <td colspan="5" class="text-center text-muted py-4">
+                                    <i class="bi bi-plus-circle-dotted fs-3 d-block text-secondary opacity-50 mb-1"></i>
+                                    No extra bonus, allowance, or deduction items added yet. Click <strong>+ Add Row</strong> above to add one.
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Hidden Empty Template for dynamically creating new rows -->
+        <template id="emptyItemRowTemplate">
+            <tr class="item-row" data-index="__prefix__">
+                <td>
+                    <input type="text" name="items-__prefix__-name" class="form-control item-name"
+                        placeholder="Item name" required id="id_items-__prefix__-name">
+                </td>
+                <td>
+                    <select name="items-__prefix__-type" class="form-select item-type" id="id_items-__prefix__-type"
+                        required>
+                        <option value="Bonus">Bonus</option>
+                        <option value="Allowance">Allowance</option>
+                        <option value="Deduction">Deduction</option>
+                        <option value="Tax">Tax</option>
+                    </select>
+                </td>
+                <td>
+                    <input type="number" name="items-__prefix__-amount" step="0.01" min="0"
+                        class="form-control item-amount" placeholder="0.00" required id="id_items-__prefix__-amount">
+                </td>
+                <td>
+                    <input type="text" name="items-__prefix__-description" class="form-control item-desc"
+                        placeholder="Optional description" id="id_items-__prefix__-description">
+                </td>
+                <td class="text-center">
+                    <button type="button" class="btn-delete-row" title="Delete row">
+                        <i class="bi bi-trash3-fill"></i>
+                    </button>
+                    <input type="hidden" name="items-__prefix__-DELETE" id="id_items-__prefix__-DELETE" value="false">
+                </td>
+            </tr>
+        </template>
+
+        <!-- Bottom Actions Bar -->
+        <div class="form-actions-bar">
+            <div>
+                <a href="{% url 'payroll' %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-x-lg me-1"></i> Cancel
+                </a>
+            </div>
+
+            <div class="d-flex align-items-center gap-2">
+                <!-- Delete Payroll Button (Visible when editing existing payroll) -->
+                {% if payroll %}
+                <button type="button" class="btn btn-outline-danger px-3" data-bs-toggle="modal" data-bs-target="#deletePayrollModal">
+                    <i class="bi bi-trash3 me-1"></i> Delete
+                </button>
+                {% endif %}
+
+                <!-- Save Button (Preserves Draft or current status) -->
+                <button type="submit" name="save" class="btn btn-primary-custom px-4">
+                    <i class="bi bi-check-lg me-1"></i>
+                    {% if payroll %}Save Changes{% else %}Save Draft{% endif %}
+                </button>
+
+                <!-- Approve Button (Updates status to Approved) -->
+                <button type="submit" name="approve" value="1" class="btn btn-success px-4"
+                    onclick="return confirm('Are you sure you want to approve this payroll?');">
+                    <i class="bi bi-check2-circle me-1"></i>
+                    {% if payroll and payroll.status == 'Approved' %}Approved{% else %}Approve Payroll{% endif %}
+                </button>
+            </div>
+        </div>
+
+    </form>
+</div>
+
+<!-- Modal for confirming payroll deletion -->
+{% if payroll %}
+<div class="modal fade" id="deletePayrollModal" tabindex="-1" aria-labelledby="deletePayrollModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header border-bottom-0 pb-0">
+                <h5 class="modal-title text-danger fw-bold" id="deletePayrollModalLabel">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>Delete Payroll
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body py-3">
+                Are you sure you want to delete the payroll record for <strong>{{ payroll.employee.full_name }}</strong> ({{ payroll.pay_period|date:"F Y" }})?
+                <p class="text-muted small mt-2 mb-0">This action cannot be undone.</p>
+            </div>
+            <div class="modal-footer border-top-0 pt-0">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                <form method="POST" action="{% url 'delete_payroll' payroll.payroll_id %}" class="d-inline">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger px-3">
+                        <i class="bi bi-trash3 me-1"></i> Confirm Delete
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/payroll.js' %}"></script>
+{% endblock %}

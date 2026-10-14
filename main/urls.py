@@ -26,6 +26,8 @@ urlpatterns = [
     path("payroll/", views.payroll, name="payroll"),
     path("payroll/new-payroll", views.new_payroll, name="new_payroll"),
     path("payroll/update/<int:payroll_id>/", views.update_payroll, name="update_payroll"),
+    path("payroll/delete/<int:payroll_id>/", views.delete_payroll, name="delete_payroll"),
+    path("payroll/api/calc/", views.api_payroll_calc, name="api_payroll_calc"),
 
 
     path("payments/test/", views.payments_test, name="payments_test"),
