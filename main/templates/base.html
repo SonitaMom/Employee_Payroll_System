@@ -13,7 +13,7 @@
     />
     <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}" />
     <link rel="stylesheet" href="{% static 'css/root.css' %}" />
-
+    <link rel="stylesheet" href="{% static 'css/paypro_modules.css' %}" />
     {% block extra_css %} {% endblock %}
   </head>
 
@@ -140,7 +140,7 @@
               id="attendanceSubmenu"
             >
               <li>
-                <a href="{% url 'attendance' %}" class="nav-link-custom">
+                <a href="{% url 'attendance_test' %}" class="nav-link-custom">
                   <i class="bi bi-briefcase-fill"></i>
                   <span>Attendance</span>
                 </a>

@@ -15,7 +15,7 @@ from .models import Employee, Department, Position, Payroll, Payment
 from datetime import date
 from calendar import monthrange
 import calendar
-
+from django.http import HttpResponse
 from main.services.dashboard import get_recent_activities
 
 from .forms import AttendanceForm, AttendanceEditForm, PayrollForm, PayrollItemFormSet
@@ -888,3 +888,15 @@ def report_dashboard(request):
         "month_amounts": month_amounts,
     }
     return render(request, "reports.html", context)
+
+
+def teammate_placeholder(request):
+    """Temporary placeholder for modules handled by teammates."""
+    return HttpResponse(
+        "<h3>This module is being developed by another teammate.</h3>"
+        "<p><a href='/employees/'>Go to Employees</a> | "
+        "<a href='/departments/'>Go to Departments</a> | "
+        "<a href='/positions/'>Go to Positions</a> | "
+        "<a href='/payslips/'>Go to Payslips</a> | "
+        "<a href='/reports/'>Go to Reports</a></p>"
+    )

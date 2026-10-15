@@ -22,7 +22,9 @@ urlpatterns = [
     path("attendance/record/", views.attendance_record, name="attendance_record"),
     path("attendance/add/", views.attendance_add, name="attendance_add"),
     path("attendance/<int:pk>/edit/", views.attendance_edit, name="attendance_edit"),
-
+    path("attendance/test/", views.attendance_edit, name="attendance_test"),
+    path("attendance/", views.attendance, name="attendance"),
+    path("attendance/test/", views.attendance_edit, name="attendance_test"),
     path("payroll/", views.payroll, name="payroll"),
     path("payroll/new-payroll", views.new_payroll, name="new_payroll"),
     path("payroll/update/<int:payroll_id>/", views.update_payroll, name="update_payroll"),
@@ -48,10 +50,23 @@ urlpatterns = [
 
 
      # Anna's 5 Modules
+    # Employees
     path("employees/", views.employee_list, name="employee_list"),
-    path("departments/", views.department_list, name="department_list"),
-    path("positions/", views.position_list, name="position_list"),
-    path("payslips/", views.payslip_list, name="payslip_list"),
-    path("reports/", views.report_dashboard, name="reports_dashboard"),
+    path("employees/test/", views.employee_list, name="employee_test"),
 
+    # Departments
+    path("departments/", views.department_list, name="department_list"),
+    path("departments/test/", views.department_list, name="department_test"),
+
+    # Positions
+    path("positions/", views.position_list, name="position_list"),
+    path("positions/test/", views.position_list, name="position_test"),
+
+    # Payslips
+    path("payslips/", views.payslip_list, name="payslip_list"),
+    path("payslips/test/", views.payslip_list, name="payslips_test"),
+
+    # Reports
+    path("reports/", views.report_dashboard, name="reports"),
+path("reports/dashboard/", views.report_dashboard, name="reports_dashboard"),
 ]
