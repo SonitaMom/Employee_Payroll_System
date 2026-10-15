@@ -36,7 +36,8 @@ urlpatterns = [
     path("payslips/test/", views.payslips_test, name="payslips_test"),
 
 
-    path("reports/", views.reports, name="reports"),
+    path("reports/", views.report_dashboard, name="reports_dashboard"),
+
 
 
     path("settings/", views.settings, name="settings"),
@@ -46,12 +47,11 @@ urlpatterns = [
     path("test/", views.test, name="test"),
 
 
-    # anna tasks
-    # ... Keep any existing login/dashboard rules your team built ...
-    path('employees/', views.employee_list, name='employee_list'),
-    path('departments/', views.department_list, name='department_list'),
-    path('positions/', views.position_list, name='position_list'),
-    path('payslips/', views.payslip_list, name='payslip_list'),
-    path('reports/', views.report_dashboard, name='report_dashboard'),
+     # Anna's 5 Modules
+    path("employees/", views.employee_list, name="employee_list"),
+    path("departments/", views.department_list, name="department_list"),
+    path("positions/", views.position_list, name="position_list"),
+    path("payslips/", views.payslip_list, name="payslip_list"),
+    path("reports/", views.report_dashboard, name="reports_dashboard"),
 
 ]

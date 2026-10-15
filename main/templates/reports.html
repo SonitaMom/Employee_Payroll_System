@@ -1,16 +1,128 @@
 {% extends 'base.html' %}
 {% load static %}
-{% block title %}Reports | PayPro{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/reports.css' %}">
+<link rel="stylesheet" href="{% static 'css/paypro_modules.css' %}">
 {% endblock %}
 
 {% block content %}
-<h1>Reports</h1>
+<div class="container-fluid p-4">
+  <!-- Screen Action Header -->
+  <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-2 no-print">
+    <div>
+      <h3 class="fw-bold mb-0 text-slate-800">Payroll Reports & Analytics</h3>
+      <small class="text-muted">Home / Reports</small>
+    </div>
+    <button class="btn btn-primary px-3 shadow-sm" onclick="window.print()">
+      <i class="bi bi-printer me-1"></i> Print / Save Report (A4)
+    </button>
+  </div>
+
+  <!-- Print-Only Letterhead Banner -->
+  <div class="report-print-header d-none">
+    <div class="text-center mb-3">
+      <h4 class="fw-bold mb-0 text-dark">ABC COMPANY CO., LTD.</h4>
+      <small class="text-muted">Phnom Penh, Cambodia</small>
+      <div class="report-title-badge">EXECUTIVE PAYROLL REPORT</div>
+      <div class="small text-muted">Generated: {% now "d F Y, H:i" %} | Pay Period: October 2026</div>
+    </div>
+  </div>
+
+  <!-- Metric Overview -->
+  <div class="row g-3 mb-4 report-metrics-row">
+    <div class="col-sm-6 col-lg-3">
+      <div class="paypro-metric-card">
+        <div>
+          <span class="text-muted small fw-semibold">Total Employees</span>
+          <h4 class="fw-bold mb-0 text-dark">{{ total_employees }}</h4>
+        </div>
+        <div class="paypro-metric-icon bg-primary-subtle text-primary no-print">
+          <i class="bi bi-people-fill"></i>
+        </div>
+      </div>
+    </div>
+    <div class="col-sm-6 col-lg-3">
+      <div class="paypro-metric-card">
+        <div>
+          <span class="text-muted small fw-semibold">Total Expenditure</span>
+          <h4 class="fw-bold mb-0 text-dark">${{ total_payroll_exp|floatformat:2 }}</h4>
+        </div>
+        <div class="paypro-metric-icon bg-success-subtle text-success no-print">
+          <i class="bi bi-currency-dollar"></i>
+        </div>
+      </div>
+    </div>
+    <div class="col-sm-6 col-lg-3">
+      <div class="paypro-metric-card">
+        <div>
+          <span class="text-muted small fw-semibold">Disbursed (Paid)</span>
+          <h4 class="fw-bold mb-0 text-success">${{ paid_payroll_exp|floatformat:2 }}</h4>
+        </div>
+        <div class="paypro-metric-icon bg-info-subtle text-info no-print">
+          <i class="bi bi-check2-all"></i>
+        </div>
+      </div>
+    </div>
+    <div class="col-sm-6 col-lg-3">
+      <div class="paypro-metric-card">
+        <div>
+          <span class="text-muted small fw-semibold">Pending Approval</span>
+          <h4 class="fw-bold mb-0 text-warning">${{ pending_payroll_exp|floatformat:2 }}</h4>
+        </div>
+        <div class="paypro-metric-icon bg-warning-subtle text-warning no-print">
+          <i class="bi bi-clock-history"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Interactive Charts Matching Screen 9 -->
+  <div class="row g-3 mb-4 report-charts-row">
+    <div class="col-lg-5 col-print-5">
+      <div class="card border-0 shadow-sm rounded-3 p-3 h-100 chart-card">
+        <h6 class="fw-bold text-dark mb-2 chart-title">Staff Distribution by Department</h6>
+        <div class="chart-container" style="position: relative; height: 230px;">
+          <canvas id="deptChart"></canvas>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-7 col-print-7">
+      <div class="card border-0 shadow-sm rounded-3 p-3 h-100 chart-card">
+        <h6 class="fw-bold text-dark mb-2 chart-title">Monthly Payroll Trend</h6>
+        <div class="chart-container" style="position: relative; height: 230px;">
+          <canvas id="monthlyPayrollChart"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Print-Only Formal Sign-Off Footer -->
+  <div class="report-print-footer d-none">
+    <div class="row pt-4 mt-2 border-top">
+      <div class="col-6">
+        <div class="small text-muted mb-4">Prepared By:</div>
+        <div class="signature-line">___________________________________</div>
+        <small class="text-muted">Accountant / HR Officer</small>
+      </div>
+      <div class="col-6 text-end">
+        <div class="small text-muted mb-4">Approved By:</div>
+        <div class="signature-line">___________________________________</div>
+        <small class="text-muted">Managing Director / Finance Dept</small>
+      </div>
+    </div>
+    <div class="text-center mt-3 small text-muted">
+      Page 1 of 1 &bull; PayPro Management System
+    </div>
+  </div>
+
+  <!-- Hidden JSON data for Chart.js -->
+  {{ dept_distribution|json_script:"dept-distribution-data" }}
+  {{ month_labels|json_script:"month-labels-data" }}
+  {{ month_amounts|json_script:"month-amounts-data" }}
+</div>
 {% endblock %}
 
-
 {% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="{% static 'js/reports.js' %}"></script>
 {% endblock %}

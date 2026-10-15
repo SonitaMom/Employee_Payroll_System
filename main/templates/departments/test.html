@@ -1,105 +1,111 @@
 {% extends 'base.html' %}
+{% load static %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/paypro_modules.css' %}">
+{% endblock %}
+
 {% block content %}
-<div class="container-fluid p-4 text-dark">
-
-    <!-- Page header -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h4 class="mb-0 fw-bold">Departments</h4>
-            <small class="text-muted">Home / Departments</small>
-        </div>
-        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addDeptModal">+ Add Department</button>
+<div class="container-fluid p-4">
+  <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-2">
+    <div>
+      <h3 class="fw-bold mb-0 text-slate-800">Departments</h3>
+      <small class="text-muted">Home / Departments</small>
     </div>
+    <button class="btn btn-primary px-3 shadow-sm" data-bs-toggle="modal" data-bs-target="#deptModal" id="addDeptBtn">
+      <i class="bi bi-plus-lg me-1"></i> Add Department
+    </button>
+  </div>
 
-    <!-- Search -->
-    <div class="card shadow-sm border-0 bg-white mb-3">
-        <div class="card-body">
-            <div class="row g-2 align-items-center">
-                <div class="col-md-6">
-                    <input type="text" id="deptSearch" class="form-control" placeholder="Search department...">
-                </div>
-                <div class="col-md-6 text-md-end">
-                    <small class="text-muted"><span id="deptCount">{{ departments|length }}</span> departments</small>
-                </div>
-            </div>
+  <div class="card border-0 shadow-sm rounded-3 mb-3">
+    <div class="card-body p-3">
+      <div class="row g-2 align-items-center">
+        <div class="col-md-6">
+          <div class="input-group">
+            <span class="input-group-text bg-white border-end-0"><i class="bi bi-search text-muted"></i></span>
+            <input type="text" id="deptSearchInput" class="form-control border-start-0 ps-0" placeholder="Search departments...">
+          </div>
         </div>
+        <div class="col-md-6 text-md-end text-muted small">
+          Total Departments: <strong class="text-dark">{{ total_departments }}</strong>
+        </div>
+      </div>
     </div>
+  </div>
 
-    <!-- Department cards -->
-    <div class="row g-3" id="deptGrid">
-        {% for d in departments %}
-        <div class="col-md-6 col-xl-4 dept-item">
-            <div class="card shadow-sm border-0 bg-white h-100">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-start mb-2">
-                        <h5 class="fw-bold mb-0 dept-name">{{ d.name }}</h5>
-                        <span class="badge bg-primary-subtle text-primary rounded-pill px-3">
-                            {{ d.emp_count }} employee{{ d.emp_count|pluralize }}
-                        </span>
-                    </div>
-                    <p class="text-muted small mb-0">{{ d.description|default:"No description." }}</p>
-                </div>
-            </div>
-        </div>
-        {% empty %}
-        <div class="col-12">
-            <div class="card shadow-sm border-0 bg-white">
-                <div class="card-body text-center py-5 text-muted">No departments found.</div>
-            </div>
-        </div>
-        {% endfor %}
-    </div>
-    <div id="deptNoMatch" class="text-center text-muted py-4" style="display:none;">No matching departments.</div>
-</div>
-
-<!-- Add Department Modal -->
-<div class="modal fade" id="addDeptModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content bg-white text-dark">
-            <div class="modal-header bg-light">
-                <h5 class="modal-title fw-bold">Add Department</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <form method="POST">
+  <div class="paypro-table-wrapper">
+    <div class="table-responsive">
+      <table class="table mb-0" id="deptTable">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Department Name</th>
+            <th>Assigned Employees</th>
+            <th>Description</th>
+            <th class="text-center">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for d in departments %}
+          <tr class="dept-row" data-id="{{ d.department_id }}" data-name="{{ d.name }}" data-description="{{ d.description|default:'' }}">
+            <td>{{ forloop.counter }}</td>
+            <td class="fw-bold text-dark">{{ d.name }}</td>
+            <td>
+              <span class="badge bg-secondary-subtle text-secondary rounded-pill px-3">{{ d.employee_count }} staff</span>
+            </td>
+            <td class="text-muted small">{{ d.description|default:"—" }}</td>
+            <td class="text-center">
+              <button class="paypro-action-btn edit-dept-btn me-1" title="Edit"><i class="bi bi-pencil-square"></i></button>
+              <form action="{% url 'department_list' %}" method="POST" class="d-inline" onsubmit="return confirm('Delete department {{ d.name }}?');">
                 {% csrf_token %}
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label class="small fw-bold">Department Name *</label>
-                        <input type="text" name="name" class="form-control" placeholder="e.g. IT, Finance, HR" maxlength="100" required>
-                    </div>
-                    <div>
-                        <label class="small fw-bold">Description</label>
-                        <textarea name="description" class="form-control" rows="3" placeholder="Short description (optional)"></textarea>
-                    </div>
-                </div>
-                <div class="modal-footer bg-light">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Save Department</button>
-                </div>
-            </form>
-        </div>
+                <input type="hidden" name="action" value="delete">
+                <input type="hidden" name="department_id" value="{{ d.department_id }}">
+                <button type="submit" class="paypro-action-btn btn-delete" title="Delete"><i class="bi bi-trash"></i></button>
+              </form>
+            </td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="5" class="text-center py-4 text-muted">No departments configured yet.</td></tr>
+          {% endfor %}
+          <tr id="deptNoMatch" style="display: none;"><td colspan="5" class="text-center py-4 text-muted">No matching departments found.</td></tr>
+        </tbody>
+      </table>
     </div>
+  </div>
 </div>
 
-<script>
-    // Client-side search
-    (function () {
-        const search = document.getElementById('deptSearch');
-        const items = document.querySelectorAll('.dept-item');
-        const count = document.getElementById('deptCount');
-        const noMatch = document.getElementById('deptNoMatch');
+<!-- Department Modal -->
+<div class="modal fade" id="deptModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow">
+      <div class="modal-header border-bottom">
+        <h5 class="modal-title fw-bold" id="deptModalLabel">Add Department</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <form action="{% url 'department_list' %}" method="POST" id="deptForm">
+        {% csrf_token %}
+        <input type="hidden" name="action" id="deptFormAction" value="create">
+        <input type="hidden" name="department_id" id="deptFormId" value="">
+        <div class="modal-body p-4">
+          <div class="mb-3">
+            <label class="form-label small fw-bold">Department Name *</label>
+            <input type="text" name="name" id="deptNameInput" class="form-control" placeholder="e.g. Finance, Engineering" required>
+          </div>
+          <div class="mb-0">
+            <label class="form-label small fw-bold">Description</label>
+            <textarea name="description" id="deptDescInput" class="form-control" rows="3" placeholder="Overview of department duties..."></textarea>
+          </div>
+        </div>
+        <div class="modal-footer bg-light border-top">
+          <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Department</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
 
-        search.addEventListener('input', function () {
-            const q = search.value.trim().toLowerCase();
-            let visible = 0;
-            items.forEach(function (item) {
-                const show = item.textContent.toLowerCase().includes(q);
-                item.style.display = show ? '' : 'none';
-                if (show) visible++;
-            });
-            count.textContent = visible;
-            if (items.length) noMatch.style.display = visible ? 'none' : '';
-        });
-    })();
-</script>
+{% block extra_js %}
+<script src="{% static 'js/departments.js' %}"></script>
 {% endblock %}

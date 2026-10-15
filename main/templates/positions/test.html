@@ -1,120 +1,126 @@
 {% extends 'base.html' %}
+{% load static %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/paypro_modules.css' %}">
+{% endblock %}
+
 {% block content %}
-<div class="container-fluid p-4 text-dark">
-
-    <!-- Page header -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h4 class="mb-0 fw-bold">Positions</h4>
-            <small class="text-muted">Home / Positions</small>
-        </div>
-        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addPosModal">+ Add Position</button>
+<div class="container-fluid p-4">
+  <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-2">
+    <div>
+      <h3 class="fw-bold mb-0 text-slate-800">Job Positions</h3>
+      <small class="text-muted">Home / Positions</small>
     </div>
+    <button class="btn btn-primary px-3 shadow-sm" data-bs-toggle="modal" data-bs-target="#posModal" id="addPosBtn">
+      <i class="bi bi-plus-lg me-1"></i> Add Position
+    </button>
+  </div>
 
-    <!-- Search -->
-    <div class="card shadow-sm border-0 bg-white mb-3">
-        <div class="card-body">
-            <div class="row g-2 align-items-center">
-                <div class="col-md-6">
-                    <input type="text" id="posSearch" class="form-control" placeholder="Search position...">
-                </div>
-                <div class="col-md-6 text-md-end">
-                    <small class="text-muted"><span id="posCount">{{ positions|length }}</span> positions</small>
-                </div>
-            </div>
+  <div class="card border-0 shadow-sm rounded-3 mb-3">
+    <div class="card-body p-3">
+      <div class="row g-2 align-items-center">
+        <div class="col-md-6">
+          <div class="input-group">
+            <span class="input-group-text bg-white border-end-0"><i class="bi bi-search text-muted"></i></span>
+            <input type="text" id="posSearchInput" class="form-control border-start-0 ps-0" placeholder="Search position title...">
+          </div>
         </div>
-    </div>
-
-    <!-- Table -->
-    <div class="card shadow-sm border-0 bg-white">
-        <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0" id="posTable">
-                <thead class="bg-light text-secondary small fw-bold">
-                    <tr>
-                        <th>#</th>
-                        <th>Position</th>
-                        <th>Basic Salary</th>
-                        <th>OT Rate (per hour)</th>
-                        <th>Description</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for p in positions %}
-                    <tr class="pos-row">
-                        <td>{{ forloop.counter }}</td>
-                        <td><strong>{{ p.name }}</strong></td>
-                        <td>${{ p.basic_salary|floatformat:2 }}</td>
-                        <td>${{ p.ot_rate|floatformat:2 }}</td>
-                        <td class="text-muted small">{{ p.description|default:"-" }}</td>
-                    </tr>
-                    {% empty %}
-                    <tr><td colspan="5" class="text-center py-4 text-muted">No positions found.</td></tr>
-                    {% endfor %}
-                    <tr id="posNoMatch" style="display:none;"><td colspan="5" class="text-center py-4 text-muted">No matching positions.</td></tr>
-                </tbody>
-            </table>
+        <div class="col-md-6 text-md-end text-muted small">
+          Total Roles: <strong class="text-dark">{{ total_positions }}</strong>
         </div>
+      </div>
     </div>
-</div>
+  </div>
 
-<!-- Add Position Modal -->
-<div class="modal fade" id="addPosModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content bg-white text-dark">
-            <div class="modal-header bg-light">
-                <h5 class="modal-title fw-bold">Add Position</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <form method="POST">
+  <div class="paypro-table-wrapper">
+    <div class="table-responsive">
+      <table class="table mb-0" id="posTable">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Title</th>
+            <th>Basic Salary</th>
+            <th>OT Rate (/hr)</th>
+            <th>Active Employees</th>
+            <th class="text-center">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for p in positions %}
+          <tr class="pos-row" 
+              data-id="{{ p.position_id }}" 
+              data-name="{{ p.name }}"
+              data-salary="{{ p.basic_salary }}"
+              data-ot="{{ p.ot_rate }}"
+              data-description="{{ p.description|default:'' }}">
+            <td>{{ forloop.counter }}</td>
+            <td class="fw-bold text-dark">{{ p.name }}</td>
+            <td class="fw-semibold text-primary">${{ p.basic_salary|floatformat:2 }}</td>
+            <td>${{ p.ot_rate|floatformat:2 }}</td>
+            <td><span class="badge bg-light text-dark border">{{ p.employee_count }} staff</span></td>
+            <td class="text-center">
+              <button class="paypro-action-btn edit-pos-btn me-1" title="Edit"><i class="bi bi-pencil-square"></i></button>
+              <form action="{% url 'position_list' %}" method="POST" class="d-inline" onsubmit="return confirm('Delete position {{ p.name }}?');">
                 {% csrf_token %}
-                <div class="modal-body">
-                    <div class="row g-3">
-                        <div class="col-12">
-                            <label class="small fw-bold">Position Name *</label>
-                            <input type="text" name="name" class="form-control" placeholder="e.g. Developer" maxlength="100" required>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="small fw-bold">Basic Salary ($) *</label>
-                            <input type="number" name="basic_salary" class="form-control" min="0" step="0.01" placeholder="0.00" required>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="small fw-bold">OT Rate ($/hour) *</label>
-                            <input type="number" name="ot_rate" class="form-control" min="0" step="0.01" placeholder="0.00" required>
-                        </div>
-                        <div class="col-12">
-                            <label class="small fw-bold">Description</label>
-                            <textarea name="description" class="form-control" rows="3" placeholder="Short description (optional)"></textarea>
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer bg-light">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Save Position</button>
-                </div>
-            </form>
-        </div>
+                <input type="hidden" name="action" value="delete">
+                <input type="hidden" name="position_id" value="{{ p.position_id }}">
+                <button type="submit" class="paypro-action-btn btn-delete" title="Delete"><i class="bi bi-trash"></i></button>
+              </form>
+            </td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="6" class="text-center py-4 text-muted">No positions configured yet.</td></tr>
+          {% endfor %}
+          <tr id="posNoMatch" style="display: none;"><td colspan="6" class="text-center py-4 text-muted">No matching positions found.</td></tr>
+        </tbody>
+      </table>
     </div>
+  </div>
 </div>
 
-<script>
-    // Client-side search
-    (function () {
-        const search = document.getElementById('posSearch');
-        const rows = document.querySelectorAll('#posTable .pos-row');
-        const count = document.getElementById('posCount');
-        const noMatch = document.getElementById('posNoMatch');
+<!-- Position Modal -->
+<div class="modal fade" id="posModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow">
+      <div class="modal-header border-bottom">
+        <h5 class="modal-title fw-bold" id="posModalLabel">Add Position</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <form action="{% url 'position_list' %}" method="POST" id="posForm">
+        {% csrf_token %}
+        <input type="hidden" name="action" id="posFormAction" value="create">
+        <input type="hidden" name="position_id" id="posFormId" value="">
+        <div class="modal-body p-4">
+          <div class="mb-3">
+            <label class="form-label small fw-bold">Position Title *</label>
+            <input type="text" name="name" id="posNameInput" class="form-control" placeholder="e.g. Senior Software Engineer" required>
+          </div>
+          <div class="row g-3 mb-3">
+            <div class="col-6">
+              <label class="form-label small fw-bold">Basic Monthly Salary ($) *</label>
+              <input type="number" step="0.01" min="0" name="basic_salary" id="posSalaryInput" class="form-control" placeholder="0.00" required>
+            </div>
+            <div class="col-6">
+              <label class="form-label small fw-bold">Overtime Rate ($/hr) *</label>
+              <input type="number" step="0.01" min="0" name="ot_rate" id="posOtInput" class="form-control" placeholder="0.00" required>
+            </div>
+          </div>
+          <div class="mb-0">
+            <label class="form-label small fw-bold">Job Description</label>
+            <textarea name="description" id="posDescInput" class="form-control" rows="3" placeholder="Summary of role expectations..."></textarea>
+          </div>
+        </div>
+        <div class="modal-footer bg-light border-top">
+          <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Position</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
 
-        search.addEventListener('input', function () {
-            const q = search.value.trim().toLowerCase();
-            let visible = 0;
-            rows.forEach(function (row) {
-                const show = row.textContent.toLowerCase().includes(q);
-                row.style.display = show ? '' : 'none';
-                if (show) visible++;
-            });
-            count.textContent = visible;
-            if (rows.length) noMatch.style.display = visible ? 'none' : '';
-        });
-    })();
-</script>
+{% block extra_js %}
+<script src="{% static 'js/positions.js' %}"></script>
 {% endblock %}

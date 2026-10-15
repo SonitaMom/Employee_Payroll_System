@@ -1,224 +1,270 @@
 {% extends 'base.html' %}
+{% load static %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/paypro_modules.css' %}">
+{% endblock %}
+
 {% block content %}
-<style>
-    .payslip-paper { background: #fff; color: #212529; }
-    .payslip-paper .ps-title { color: #1d4ed8; font-weight: 700; letter-spacing: .5px; }
-    .payslip-paper .net-box { background: #eff6ff; border-radius: 6px; }
+<div class="container-fluid p-4">
+  <!-- Top Section -->
+  <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-2">
+    <div>
+      <h3 class="fw-bold mb-0 text-slate-800">Salary Payslips</h3>
+      <small class="text-muted">Home / Payslips</small>
+    </div>
+    <div>
+      <button type="button" class="btn btn-outline-primary px-3 shadow-sm rounded-pill" id="printAllBtn">
+        <i class="bi bi-printer me-1"></i> Print All Payslips
+      </button>
+    </div>
+  </div>
 
-    /* Print only the payslip that is being printed */
-    @media print {
-        body * { visibility: hidden !important; }
-        .payslip-paper.printing, .payslip-paper.printing * { visibility: visible !important; }
-        .payslip-paper.printing { position: fixed; left: 0; top: 0; width: 100%; padding: 24px; }
-    }
-</style>
-
-<div class="container-fluid p-4 text-dark">
-
-    <!-- Page header -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
+  <!-- Metric Badges Row -->
+  <div class="row g-3 mb-4">
+    <div class="col-sm-6 col-md-4">
+      <div class="paypro-metric-card">
         <div>
-            <h4 class="mb-0 fw-bold">Payslips</h4>
-            <small class="text-muted">Home / Payslips</small>
+          <span class="text-muted small fw-semibold">Disbursed Total</span>
+          <h4 class="fw-bold mb-0 text-success">${{ paid_sum|floatformat:2 }}</h4>
         </div>
+        <div class="paypro-metric-icon bg-success-subtle text-success">
+          <i class="bi bi-wallet2"></i>
+        </div>
+      </div>
     </div>
+    <div class="col-sm-6 col-md-4">
+      <div class="paypro-metric-card">
+        <div>
+          <span class="text-muted small fw-semibold">Approved / Pending</span>
+          <h4 class="fw-bold mb-0 text-warning">${{ pending_sum|floatformat:2 }}</h4>
+        </div>
+        <div class="paypro-metric-icon bg-warning-subtle text-warning">
+          <i class="bi bi-hourglass-split"></i>
+        </div>
+      </div>
+    </div>
+  </div>
 
-    <!-- Search -->
-    <div class="card shadow-sm border-0 bg-white mb-3">
-        <div class="card-body">
-            <div class="row g-2 align-items-center">
-                <div class="col-md-6">
-                    <input type="text" id="slipSearch" class="form-control" placeholder="Search employee, department or position...">
-                </div>
-                <div class="col-md-6 text-md-end">
-                    <small class="text-muted"><span id="slipCount">{{ payrolls|length }}</span> payslips</small>
-                </div>
-            </div>
+  <!-- Search Bar -->
+  <div class="card border-0 shadow-sm rounded-3 mb-3">
+    <div class="card-body p-3">
+      <div class="row g-2 align-items-center">
+        <div class="col-md-6">
+          <div class="input-group">
+            <span class="input-group-text bg-white border-end-0"><i class="bi bi-search text-muted"></i></span>
+            <input type="text" id="slipSearchInput" class="form-control border-start-0 ps-0" placeholder="Search by employee, department or position...">
+          </div>
         </div>
+        <div class="col-md-6 text-md-end text-muted small">
+          Total Statements: <strong class="text-dark">{{ total_count }}</strong>
+        </div>
+      </div>
     </div>
+  </div>
 
-    <!-- Payslip list -->
-    <div class="card shadow-sm border-0 bg-white">
-        <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0" id="slipTable">
-                <thead class="bg-light text-secondary small fw-bold">
-                    <tr>
-                        <th>#</th>
-                        <th>Employee</th>
-                        <th>Department</th>
-                        <th>Position</th>
-                        <th>Pay Period</th>
-                        <th>Net Salary</th>
-                        <th>Status</th>
-                        <th class="text-center">Action</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for p in payrolls %}
-                    <tr class="slip-row">
-                        <td>{{ forloop.counter }}</td>
-                        <td>{{ p.employee.first_name }} {{ p.employee.last_name }}</td>
-                        <td>{{ p.employee.department.name }}</td>
-                        <td>{{ p.employee.position.name }}</td>
-                        <td>{{ p.pay_period|date:"F Y" }}</td>
-                        <td><strong>${{ p.net_salary|floatformat:2 }}</strong></td>
-                        <td>
-                            {% if p.status == "Paid" %}
-                                <span class="badge bg-success rounded-pill px-3">Paid</span>
-                            {% elif p.status == "Approved" %}
-                                <span class="badge bg-primary rounded-pill px-3">Approved</span>
-                            {% else %}
-                                <span class="badge bg-warning text-dark rounded-pill px-3">{{ p.status }}</span>
-                            {% endif %}
-                        </td>
-                        <td class="text-center">
-                            <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#payslipModal{{ p.payroll_id }}">View</button>
-                        </td>
-                    </tr>
-                    {% empty %}
-                    <tr><td colspan="8" class="text-center py-4 text-muted">No payslips found.</td></tr>
-                    {% endfor %}
-                    <tr id="slipNoMatch" style="display:none;"><td colspan="8" class="text-center py-4 text-muted">No matching payslips.</td></tr>
-                </tbody>
-            </table>
-        </div>
+  <!-- Table View -->
+  <div class="paypro-table-wrapper">
+    <div class="table-responsive">
+      <table class="table mb-0" id="slipTable">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Employee</th>
+            <th>Department</th>
+            <th>Position</th>
+            <th>Pay Period</th>
+            <th>Net Salary</th>
+            <th>Status</th>
+            <th class="text-center">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for p in payrolls %}
+          <tr class="slip-row">
+            <td>{{ forloop.counter }}</td>
+            <td class="fw-bold text-dark">{{ p.employee.full_name }}</td>
+            <td>{{ p.employee.department.name }}</td>
+            <td>{{ p.employee.position.name }}</td>
+            <td>{{ p.pay_period|date:"F Y" }}</td>
+            <td class="fw-bold text-primary">${{ p.net_salary|floatformat:2 }}</td>
+            <td>
+              {% if p.status == "Paid" %}
+              <span class="badge-status badge-paid">Paid</span>
+              {% elif p.status == "Approved" %}
+              <span class="badge-status badge-active">Approved</span>
+              {% else %}
+              <span class="badge-status badge-pending">{{ p.status }}</span>
+              {% endif %}
+            </td>
+            <td class="text-center">
+              <button class="btn btn-sm btn-outline-primary px-3 rounded-pill" data-bs-toggle="modal" data-bs-target="#payslipModal{{ p.payroll_id }}">
+                <i class="bi bi-eye me-1"></i> View
+              </button>
+            </td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="8" class="text-center py-4 text-muted">No payslip records available.</td></tr>
+          {% endfor %}
+          <tr id="slipNoMatch" style="display: none;"><td colspan="8" class="text-center py-4 text-muted">No matching records found.</td></tr>
+        </tbody>
+      </table>
     </div>
+  </div>
 </div>
 
-<!-- One payslip modal per payroll -->
+<!-- Modals for Individual Payslips -->
 {% for p in payrolls %}
 <div class="modal fade" id="payslipModal{{ p.payroll_id }}" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
-        <div class="modal-content bg-white text-dark">
-            <div class="modal-header bg-light">
-                <h5 class="modal-title fw-bold">Payslip</h5>
-                <div class="ms-auto me-2">
-                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="printPayslip('{{ p.payroll_id }}')">Print / Save as PDF</button>
-                </div>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <div class="payslip-paper p-3" id="payslipPaper{{ p.payroll_id }}">
-
-                    <div class="text-center mb-3">
-                        <h5 class="fw-bold mb-0">ABC COMPANY CO., LTD.</h5>
-                        <small class="text-muted">Phnom Penh, Cambodia</small>
-                        <div class="ps-title mt-2">SALARY PAYSLIP</div>
-                        <small class="text-muted">{{ p.pay_period|date:"F Y" }}</small>
-                    </div>
-
-                    <div class="row small mb-3">
-                        <div class="col-6">
-                            <div><span class="text-muted">Employee Name:</span> <strong>{{ p.employee.first_name }} {{ p.employee.last_name }}</strong></div>
-                            <div><span class="text-muted">Employee ID:</span> EMP{{ p.employee.employee_id|stringformat:"03d" }}</div>
-                            <div><span class="text-muted">Department:</span> {{ p.employee.department.name }}</div>
-                            <div><span class="text-muted">Position:</span> {{ p.employee.position.name }}</div>
-                        </div>
-                        <div class="col-6">
-                            <div><span class="text-muted">Pay Period:</span> {{ p.pay_period|date:"F Y" }}</div>
-                            <div><span class="text-muted">Payroll #:</span> {{ p.payroll_id }}</div>
-                            <div><span class="text-muted">Status:</span> <strong>{{ p.status }}</strong></div>
-                        </div>
-                    </div>
-
-                    <div class="row g-3 mb-3 slip-calc">
-                        <!-- Earnings -->
-                        <div class="col-md-6">
-                            <div class="fw-bold border-bottom pb-1 mb-2">EARNINGS</div>
-                            <div class="d-flex justify-content-between small mb-1">
-                                <span>Basic Salary</span>
-                                <span class="earn" data-amount="{{ p.basic_salary|stringformat:'.2f' }}">${{ p.basic_salary|floatformat:2 }}</span>
-                            </div>
-                            <div class="d-flex justify-content-between small mb-1">
-                                <span>Overtime</span>
-                                <span class="earn" data-amount="{{ p.ot_amount|stringformat:'.2f' }}">${{ p.ot_amount|floatformat:2 }}</span>
-                            </div>
-                            {% for item in p.items.all %}
-                                {% if item.type == "Bonus" or item.type == "Allowance" %}
-                                <div class="d-flex justify-content-between small mb-1">
-                                    <span>{{ item.name }} <span class="text-muted">({{ item.type }})</span></span>
-                                    <span class="earn" data-amount="{{ item.amount|stringformat:'.2f' }}">${{ item.amount|floatformat:2 }}</span>
-                                </div>
-                                {% endif %}
-                            {% endfor %}
-                            <div class="d-flex justify-content-between fw-bold border-top pt-1 mt-2">
-                                <span>Total Earnings</span>
-                                <span class="total-earn">$0.00</span>
-                            </div>
-                        </div>
-
-                        <!-- Deductions -->
-                        <div class="col-md-6">
-                            <div class="fw-bold border-bottom pb-1 mb-2">DEDUCTIONS</div>
-                            {% for item in p.items.all %}
-                                {% if item.type == "Deduction" or item.type == "Tax" %}
-                                <div class="d-flex justify-content-between small mb-1">
-                                    <span>{{ item.name }} <span class="text-muted">({{ item.type }})</span></span>
-                                    <span class="ded" data-amount="{{ item.amount|stringformat:'.2f' }}">${{ item.amount|floatformat:2 }}</span>
-                                </div>
-                                {% endif %}
-                            {% endfor %}
-                            <div class="d-flex justify-content-between fw-bold border-top pt-1 mt-2">
-                                <span>Total Deductions</span>
-                                <span class="total-ded">$0.00</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="net-box d-flex justify-content-between align-items-center p-3">
-                        <span class="fw-bold">Net Salary</span>
-                        <span class="fw-bold fs-5 text-primary">${{ p.net_salary|floatformat:2 }}</span>
-                    </div>
-                </div>
-            </div>
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content border-0 shadow">
+      <div class="modal-header border-bottom bg-light">
+        <h5 class="modal-title fw-bold">Salary Payslip Overview</h5>
+        <div class="ms-auto me-2">
+          <button type="button" class="btn btn-sm btn-primary print-single-btn" data-target="singleSlip{{ p.payroll_id }}">
+            <i class="bi bi-printer me-1"></i> Print / Download PDF
+          </button>
         </div>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body p-4">
+        <div class="payslip-invoice" id="singleSlip{{ p.payroll_id }}">
+          <div class="text-center mb-4">
+            <h5 class="company-logo-text mb-0">ABC COMPANY CO., LTD.</h5>
+            <small class="text-muted">Phnom Penh, Cambodia</small>
+            <div class="invoice-title">SALARY PAYSLIP</div>
+            <div class="badge bg-light text-secondary border px-3 py-1">{{ p.pay_period|date:"F Y" }}</div>
+          </div>
+
+          <div class="row g-2 mb-4 small border-bottom pb-3">
+            <div class="col-6">
+              <div><span class="text-muted">Employee Name:</span> <strong>{{ p.employee.full_name }}</strong></div>
+              <div><span class="text-muted">Employee ID:</span> EMP{{ p.employee.employee_id|stringformat:"03d" }}</div>
+              <div><span class="text-muted">Department:</span> {{ p.employee.department.name }}</div>
+              <div><span class="text-muted">Position:</span> {{ p.employee.position.name }}</div>
+            </div>
+            <div class="col-6 text-end">
+              <div><span class="text-muted">Payroll Ref:</span> #PAY-{{ p.payroll_id }}</div>
+              <div><span class="text-muted">Payment Method:</span> {{ p.payment.payment_method|default:"Bank Transfer" }}</div>
+              <div><span class="text-muted">Payment Date:</span> {{ p.payment.payment_date|date:"d/m/Y"|default:"Pending" }}</div>
+              <div><span class="text-muted">Status:</span> <strong>{{ p.status }}</strong></div>
+            </div>
+          </div>
+
+          <div class="row g-4 mb-2">
+            <div class="col-6">
+              <div class="section-heading">Earnings</div>
+              <div class="d-flex justify-content-between small mb-1">
+                <span>Basic Salary</span>
+                <span class="fw-semibold">${{ p.basic_salary|floatformat:2 }}</span>
+              </div>
+              <div class="d-flex justify-content-between small mb-1">
+                <span>Overtime</span>
+                <span class="fw-semibold">${{ p.ot_amount|floatformat:2 }}</span>
+              </div>
+              {% for item in p.items.all %}
+                {% if item.type == "Bonus" or item.type == "Allowance" %}
+                <div class="d-flex justify-content-between small mb-1">
+                  <span>{{ item.name }} ({{ item.type }})</span>
+                  <span class="fw-semibold">${{ item.amount|floatformat:2 }}</span>
+                </div>
+                {% endif %}
+              {% endfor %}
+            </div>
+
+            <div class="col-6">
+              <div class="section-heading">Deductions</div>
+              {% for item in p.items.all %}
+                {% if item.type == "Deduction" or item.type == "Tax" %}
+                <div class="d-flex justify-content-between small mb-1">
+                  <span>{{ item.name }} ({{ item.type }})</span>
+                  <span class="fw-semibold text-danger">-${{ item.amount|floatformat:2 }}</span>
+                </div>
+                {% endif %}
+              {% endfor %}
+            </div>
+          </div>
+
+          <div class="net-summary-box d-flex justify-content-between align-items-center">
+            <span class="fw-bold fs-6 text-dark">Net Salary Distributed</span>
+            <span class="fw-bold fs-4 text-primary">${{ p.net_salary|floatformat:2 }}</span>
+          </div>
+        </div>
+      </div>
     </div>
+  </div>
 </div>
 {% endfor %}
 
-<script>
-    // Calculate Total Earnings / Total Deductions for every payslip
-    function sumAmounts(root, selector) {
-        let total = 0;
-        root.querySelectorAll(selector).forEach(function (el) {
-            total += parseFloat(el.dataset.amount) || 0;
-        });
-        return total;
-    }
+<!-- Dedicated Container for "Print All" Mode -->
+<div id="printAllContainer" class="d-none">
+  {% for p in payrolls %}
+  <div class="payslip-invoice print-slip-page">
+    <div class="text-center mb-4">
+      <h5 class="company-logo-text mb-0">ABC COMPANY CO., LTD.</h5>
+      <small class="text-muted">Phnom Penh, Cambodia</small>
+      <div class="invoice-title">SALARY PAYSLIP</div>
+      <div class="badge bg-light text-secondary border px-3 py-1">{{ p.pay_period|date:"F Y" }}</div>
+    </div>
 
-    document.querySelectorAll('.payslip-paper').forEach(function (paper) {
-        const earn = sumAmounts(paper, '.earn');
-        const ded = sumAmounts(paper, '.ded');
-        paper.querySelector('.total-earn').textContent = '$' + earn.toFixed(2);
-        paper.querySelector('.total-ded').textContent = '$' + ded.toFixed(2);
-    });
+    <div class="row g-2 mb-4 small border-bottom pb-3">
+      <div class="col-6">
+        <div><span class="text-muted">Employee Name:</span> <strong>{{ p.employee.full_name }}</strong></div>
+        <div><span class="text-muted">Employee ID:</span> EMP{{ p.employee.employee_id|stringformat:"03d" }}</div>
+        <div><span class="text-muted">Department:</span> {{ p.employee.department.name }}</div>
+        <div><span class="text-muted">Position:</span> {{ p.employee.position.name }}</div>
+      </div>
+      <div class="col-6 text-end">
+        <div><span class="text-muted">Payroll Ref:</span> #PAY-{{ p.payroll_id }}</div>
+        <div><span class="text-muted">Payment Method:</span> {{ p.payment.payment_method|default:"Bank Transfer" }}</div>
+        <div><span class="text-muted">Payment Date:</span> {{ p.payment.payment_date|date:"d/m/Y"|default:"Pending" }}</div>
+        <div><span class="text-muted">Status:</span> <strong>{{ p.status }}</strong></div>
+      </div>
+    </div>
 
-    // Print one payslip (choose "Save as PDF" in the print dialog to get a PDF)
-    function printPayslip(id) {
-        const paper = document.getElementById('payslipPaper' + id);
-        paper.classList.add('printing');
-        window.print();
-        paper.classList.remove('printing');
-    }
+    <div class="row g-4 mb-2">
+      <div class="col-6">
+        <div class="section-heading">Earnings</div>
+        <div class="d-flex justify-content-between small mb-1">
+          <span>Basic Salary</span>
+          <span class="fw-semibold">${{ p.basic_salary|floatformat:2 }}</span>
+        </div>
+        <div class="d-flex justify-content-between small mb-1">
+          <span>Overtime</span>
+          <span class="fw-semibold">${{ p.ot_amount|floatformat:2 }}</span>
+        </div>
+        {% for item in p.items.all %}
+          {% if item.type == "Bonus" or item.type == "Allowance" %}
+          <div class="d-flex justify-content-between small mb-1">
+            <span>{{ item.name }} ({{ item.type }})</span>
+            <span class="fw-semibold">${{ item.amount|floatformat:2 }}</span>
+          </div>
+          {% endif %}
+        {% endfor %}
+      </div>
 
-    // Client-side search
-    (function () {
-        const search = document.getElementById('slipSearch');
-        const rows = document.querySelectorAll('#slipTable .slip-row');
-        const count = document.getElementById('slipCount');
-        const noMatch = document.getElementById('slipNoMatch');
+      <div class="col-6">
+        <div class="section-heading">Deductions</div>
+        {% for item in p.items.all %}
+          {% if item.type == "Deduction" or item.type == "Tax" %}
+          <div class="d-flex justify-content-between small mb-1">
+            <span>{{ item.name }} ({{ item.type }})</span>
+            <span class="fw-semibold text-danger">-${{ item.amount|floatformat:2 }}</span>
+          </div>
+          {% endif %}
+        {% endfor %}
+      </div>
+    </div>
 
-        search.addEventListener('input', function () {
-            const q = search.value.trim().toLowerCase();
-            let visible = 0;
-            rows.forEach(function (row) {
-                const show = row.textContent.toLowerCase().includes(q);
-                row.style.display = show ? '' : 'none';
-                if (show) visible++;
-            });
-            count.textContent = visible;
-            if (rows.length) noMatch.style.display = visible ? 'none' : '';
-        });
-    })();
-</script>
+    <div class="net-summary-box d-flex justify-content-between align-items-center">
+      <span class="fw-bold fs-6 text-dark">Net Salary Distributed</span>
+      <span class="fw-bold fs-4 text-primary">${{ p.net_salary|floatformat:2 }}</span>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/payslips.js' %}"></script>
 {% endblock %}
