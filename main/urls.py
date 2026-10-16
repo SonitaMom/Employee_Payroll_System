@@ -30,8 +30,10 @@ urlpatterns = [
     path("payroll/api/calc/", views.api_payroll_calc, name="api_payroll_calc"),
 
 
-    path("payments/test/", views.payments_test, name="payments_test"),
-
+    path("payments/payment/", views.payments_test, name="payments"),
+    path("payments/<int:pk>/complete/", views.payment_complete, name="payment_complete"),
+    path("payments/paymentDetail/", views.payment_details, name="payment_details"),
+    path("payments/payment/details/", views.payment_details, name="payment_details"),
 
     path("payslips/test/", views.payslips_test, name="payslips_test"),
 

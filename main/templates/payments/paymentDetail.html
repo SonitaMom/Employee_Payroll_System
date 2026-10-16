@@ -1,0 +1,176 @@
+{% extends 'base.html' %} 
+{% block title %}Payment Details | PayPro{% endblock %}
+ {% load static %} {% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/payment.css' %}" />
+{% endblock %} {% block content %}
+
+<div
+  class="d-flex justify-content-between align-items-center flex-wrap gap-3 m-3"
+>
+  <div class="payment-head">
+    <h1>Payment Details</h1>
+    <p class="mt-2 mb-0">Home / Payments / Details</p>
+  </div>
+  <a
+    href="{% url 'payments' %}?month={{ selected|date:'Y-m' }}"
+    class="btn btn-outline-secondary"
+  >
+    <i class="bi bi-arrow-left me-1"></i> Back to payments
+  </a>
+</div>
+
+<form
+  method="get"
+  class="detail-panel m-3 p-3 d-flex align-items-end flex-wrap gap-3"
+  id="detailForm"
+>
+  <div>
+    <label for="monthSel" class="form-label mb-1">Month</label>
+    <select name="month" id="" class="month-select form-select" onchange="this.form.submit()"> 
+                {% for m in months %}
+                <option value="{{ m|date:'Y-m' }}" {% if m == selected %}selected{% endif %}>{{ m|date:"F Y" }}</option>
+                {% endfor %}
+            </select>
+  </div>
+  <div>
+    <label for="empSel" class="form-label mb-1">Employee</label>
+    <select
+      name="payment"
+      id="empSel"
+      class="form-select detail-select"
+      autocomplete="off"
+    >
+      <option value="">Select employee name</option>
+      {% for p in payments %}
+      <option
+        value="{{p.pk}}"
+        {%
+        if
+        payment
+        and
+        payment.pk=""
+        ="p.pk"
+        %}selected{%
+        endif
+        %}
+      >
+        {{p.payroll.employee.full_name}}
+      </option>
+      {% endfor %}
+    </select>
+  </div>
+  <noscript><button class="btn btn-primary">Show</button></noscript>
+</form>
+
+{% if payment %} {% with pr=payment.payroll e=payment.payroll.employee %}
+<div class="detail-panel m-3 p-4">
+  <div class="detail-head">
+    <span class="avatar avatar-lg avatar-{{ e.sex|lower }}"
+      >{{e.first_name|slice:"1"|upper}}{{e.last_name|slice:"1"|upper}}</span
+    >
+    <div class="flex-grow-1">
+      <div class="detail-name">{{e.full_name}}</div>
+      <div class="detail-sub">
+        {{e.employee_id}} &middot; {{e.department|default:"No department"}}
+      </div>
+    </div>
+    <span class="status-pill status-{{payment.status|lower}}">
+      {% if payment.status == "Completed" %}
+      <i class="bi bi-check-circle-fill"></i>
+      {% elif payment.status == "Pending" %}
+      <i class="bi bi-clock-fill"></i>
+      {% else %}
+      <i class="bi bi-x-circle-fill"></i>
+      {% endif %} {{payment.status}}
+    </span>
+  </div>
+
+  <div class="detail-grid">
+    <div class="detail-card">
+      <h6>Employee</h6>
+      <dl>
+        <div class="dl-row">
+          <dt>Employee ID</dt>
+          <dd>{{e.employee_id}}</dd>
+        </div>
+        <div class="dl-row">
+          <dt>Department</dt>
+          <dd>{{e.department|default:"Not set"}}</dd>
+        </div>
+        <div class="dl-row">
+          <dt>Position</dt>
+          <dd>{{e.position|default:"Not set"}}</dd>
+        </div>
+        <div class="dl-row">
+          <dt>Hire date</dt>
+          <dd>{{e.hire_date|date:"d M Y"|default:"Not set"}}</dd>
+        </div>
+        <div class="dl-row">
+          <dt>Status</dt>
+          <dd>{{e.status}}</dd>
+        </div>
+      </dl>
+    </div>
+    <div class="detail-card">
+      <h6>Payroll &middot; {{pr.pay_period|date:"F Y"}}</h6>
+      <dl>
+        <div class="dl-row">
+          <dt>Basic salary</dt>
+          <dd>${{pr.basic_salary|floatformat:2}}</dd>
+        </div>
+        <div class="dl-row">
+          <dt>Overtime</dt>
+          <dd>${{pr.ot_amount|floatformat:2}}</dd>
+        </div>
+        <div class="dl-row">
+          <dt>Net salary</dt>
+          <dd><strong>${{pr.net_salary|floatformat:2}}</strong></dd>
+        </div>
+        <div class="dl-row">
+          <dt>Payroll status</dt>
+          <dd>{{pr.status}}</dd>
+        </div>
+      </dl>
+    </div>
+
+    <div class="detail-card">
+      <h6>Payment</h6>
+      <dl>
+        <div class="dl-row">
+          <dt>Amount</dt>
+          <dd><strong>${{ payment.amount|floatformat:2 }}</strong></dd>
+        </div>
+        <div class="dl-row">
+          <dt>Method</dt>
+          <dd>{{ payment.payment_method|default:"Not set" }}</dd>
+        </div>
+        <div class="dl-row">
+          <dt>Payment date</dt>
+          <dd>{{ payment.payment_date|date:"d M Y"|default:"Not set" }}</dd>
+        </div>
+        <div class="dl-row">
+          <dt>Reference</dt>
+          <dd>{{ payment.reference|default:"Not set" }}</dd>
+        </div>
+        <div class="dl-row">
+          <dt>Note</dt>
+          <dd>{{ payment.note|default:"Not set" }}</dd>
+        </div>
+      </dl>
+    </div>
+  </div>
+</div>
+{% endwith %} {% else %}
+<div class="detail-panel m-3">
+  <div class="detail-empty">
+    <i class="bi bi-person-lines-fill"></i>
+    <p class="mb-0">
+      {% if payments %}Select an employee to see their payment details. {% else
+      %}No payments for {{ selected|date:"F Y" }}. Payments appear when a
+      payroll is approved.{% endif %}
+    </p>
+  </div>
+</div>
+{% endif %} {% endblock %} {% block extra_js %}
+<script src="{% static 'js/payment/paymentDetail.js' %}"></script>
+{% endblock %}

@@ -20,6 +20,7 @@ from django.contrib import messages
 
 from django.db import transaction
 from .services.payroll import calculate_payroll
+from django.shortcuts import render
 
 
 def home(request):
@@ -413,6 +414,14 @@ def new_payroll(request):
                 formset.instance = payroll
                 formset.save()
 
+
+                #Create the pending payment when approved
+                if payroll.status == Payroll.StatusChoices.APPROVED:
+                    Payment.objects.get_or_create(
+                        payroll=payroll,
+                        defaults={"amount": payroll.net_salary},
+                    )
+
             if is_approve:
                 messages.success(request, f"Payroll for {payroll.employee.full_name} created and approved.")
             else:
@@ -497,6 +506,13 @@ def update_payroll(request, payroll_id):
                 payroll.save()
                 formset.save()
 
+                #create the pending payment when approved
+                if payroll.status == Payroll.StatusChoices.APPROVED:
+                    Payment.objects.get_or_create(
+                        payroll = payroll,
+                        defaults={"amount":payroll.net_salary}
+                    )
+
             if is_approve:
                 messages.success(request, f"Payroll for {payroll.employee.full_name} updated and approved.")
             else:
@@ -574,6 +590,13 @@ def api_payroll_calc(request):
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=400)
 
+def _safe_next(request):
+    """Redirect to the posted `next` URL if it is safe, else to the payments page."""
+    nxt = request.POST.get("next", "")
+    if nxt and url_has_allowed_host_and_scheme(nxt, allowed_hosts={request.get_host()}):
+        return redirect(nxt)
+    return redirect("payments_test")
+
 
 
 
@@ -582,9 +605,147 @@ def api_payroll_calc(request):
 @login_required
 @permission_required("main.view_payment", raise_exception=True)
 def payments_test(request):
-    return render(request, "payments/test.html", {
-        "title": "test"
+    # if false back toc current month 
+    today=date.today()
+    try:
+        year, month = map(int, request.GET.get("month", "").split("-"))
+        selected=date(year, month,1)
+    except ValueError:
+        selected=today.replace(day=1)
+
+    #12 months
+    base=today.year *12 +today.month -1
+    months =[date((base +i) // 12, (base +i) %12 +1,1) for i in range(-12,13)]
+
+    month_qs=Payment.objects.select_related("payroll__employee").filter(payroll__pay_period__year=selected.year,
+                payroll__pay_period__month=selected.month)
+
+    def total(status=None):
+        qs=month_qs.filter(status=status) if status else month_qs
+        return qs.aggregate(t=Sum("amount"))["t"] or 0
+
+
+    #Search _ status filter for table
+    status = request.GET.get("status", "")
+    q=request.GET.get("q", "").strip()
+    qs = month_qs
+    if status:
+        qs=qs.filter(status__iexact=status)
+    if q:
+        qs = qs.filter(
+            Q(payroll__employee__first_name__icontains=q)
+            | Q(payroll__employee__last_name__icontains=q)
+        )
+
+    qs = qs.order_by("-payroll__pay_period", "-pk")
+ 
+    page = Paginator(qs, 5).get_page(request.GET.get("page"))
+
+    # Query string without "page", so Previous/Next keep month, status and search
+    params = request.GET.copy()
+    params.pop("page", None)
+
+    # Approved payrolls of this month that have no payment yet (for "+ Add Payment")
+    available_payrolls = Payroll.objects.select_related("employee").filter(
+        pay_period__year=selected.year,
+        pay_period__month=selected.month,
+        status=Payroll.StatusChoices.APPROVED,
+        payment__isnull=True,
+    )
+
+    methods = [c[0] for c in Payment.MethodChoices.choices]
+
+    # page = Paginator(qs, 5).get_page(request.GET.get("page"))
+
+    return render(request, "payments/payment.html", {
+        "title": "Payment",
+        "months": months,
+        "selected": selected,
+        "page": page,
+        "status": status,
+        "q": q,
+        "keep": params.urlencode(),
+        "total": total(),
+        "pending": total(Payment.StatusChoices.PENDING),
+        "paid": total(Payment.StatusChoices.COMPLETED),
+        "available_payrolls": available_payrolls,
+        "methods": methods,
     })
+
+
+@login_required
+@permission_required("main.view_payment", raise_exception=True)
+def payment_details(request):
+    """Separate page: pick an employee, see their employee / payroll / payment info."""
+    today=date.today()
+    try:
+            year, month = map(int, request.GET.get("month", "").split("-"))
+            selected=date(year, month,1)
+    except ValueError:
+            selected=today.replace(day=1)
+    
+        #12 months
+    base=today.year *12 +today.month -1
+    months =[date((base +i) // 12, (base +i) %12 +1,1) for i in range(-12,13)]
+ 
+    payments = Payment.objects.select_related(
+        "payroll__employee__department", "payroll__employee__position"
+    ).filter(
+        payroll__pay_period__year=selected.year,
+        payroll__pay_period__month=selected.month,
+    ).order_by("payroll__employee__first_name", "payroll__employee__last_name")
+ 
+    payment = None
+    pid = request.GET.get("payment", "")
+    if pid.isdigit():
+        payment = payments.filter(pk=pid).first()
+ 
+    return render(request, "payments/paymentDetail.html", {
+        "title": "Payment Details",
+        "months": months,
+        "selected": selected,
+        "payments": payments,
+        "payment": payment,
+    })
+ 
+
+@login_required
+@permission_required("main.change_payment", raise_exception=True)
+@require_POST
+def payment_complete(request,pk):
+    payment = get_object_or_404(
+        Payment.objects.select_related("payroll__employee"),pk=pk
+    )
+    # back=request.POST.get("next") or "payments"
+    method = request.POST.get("payment_method")
+    if payment.status == Payment.StatusChoices.COMPLETED:
+        messages.info(request, "This payment is already completed.")
+        return _safe_next(request)
+
+    if payment.payroll.status == Payroll.StatusChoices.DRAFT:
+        messages.error(request, "Approve the payroll before completing the payment.")
+        return _safe_next(request)
+
+
+       
+    if method in Payment.MethodChoices.values:
+        payment.payment_method = method
+
+    if not payment.payment_method:
+        messages.error(request, "Choose a payment method first.")
+        return _safe_next(request)
+
+    with transaction.atomic():
+        payment.status = Payment.StatusChoices.COMPLETED
+        payment.payment_date = timezone.localdate()
+        payment.save()
+
+        payroll = payment.payroll
+        payroll.status = Payroll.StatusChoices.PAID
+        payroll.save()
+
+    messages.success(request, f"Payment for {payroll.employee.full_name} completed.")
+    return _safe_next(request)
 
 
 @login_required
