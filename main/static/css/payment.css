@@ -9,7 +9,7 @@
   border-radius: 16px;
   padding: 20px 22px;
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 20px;
   transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   box-shadow:
@@ -24,6 +24,8 @@
     0 4px 6px -2px rgba(15, 23, 42, 0.03);
   border-color: #cbd5e1;
 }
+
+
 
 .pay-stat-icon {
   width: 48px;
@@ -84,7 +86,7 @@
 }
 
 .chip:hover{
-  background-color: #6b7690;
+  background-color: #6C757D;
   color: #ffffff;
   transition: all 0.15s ease-in;
 }
