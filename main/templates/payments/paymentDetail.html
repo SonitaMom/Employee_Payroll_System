@@ -1,6 +1,4 @@
-{% extends 'base.html' %} 
-{% block title %}Payment Details | PayPro{% endblock %}
- {% load static %} {% block extra_css %}
+{% extends 'base.html' %} {% block title %}Payment Details | PayPro{% endblock%} {% load static %} {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/payment.css' %}" />
 {% endblock %} {% block content %}
 
@@ -24,13 +22,35 @@
   class="detail-panel m-3 p-3 d-flex align-items-end flex-wrap gap-3"
   id="detailForm"
 >
-  <div>
-    <label for="monthSel" class="form-label mb-1">Month</label>
-    <select name="month" id="" class="month-select form-select" onchange="this.form.submit()"> 
-                {% for m in months %}
-                <option value="{{ m|date:'Y-m' }}" {% if m == selected %}selected{% endif %}>{{ m|date:"F Y" }}</option>
-                {% endfor %}
-            </select>
+  <div class="d-flex align-items-end justify-content-start gap-3">
+    <div>
+      <label for="monthSel" class="form-label mb-1">Month</label>
+      <select
+        name="month"
+        id=""
+        class="month-select form-select"
+        onchange="this.form.submit()"
+      >
+        {% for m,name in months %}
+        <option value="{{ m }}" {% if m == selected_month %}selected{% endif %}>{{ name }}
+        </option>
+        {% endfor %}
+      </select>
+    </div>
+    <div>
+      <label for="" class="form-label mb-1">Year</label>
+      <select
+        name="year"
+        id=""
+        class="month-select form-select"
+        onchange="this.form.submit()"
+      >
+      {% for y in years %}
+        <option value="{{ y }}"{% if y == selected_year %}selected{%endif%}>{{ y }}
+        </option>
+        {% endfor %}
+      </select>
+    </div>
   </div>
   <div>
     <label for="empSel" class="form-label mb-1">Employee</label>
@@ -165,9 +185,8 @@
   <div class="detail-empty">
     <i class="bi bi-person-lines-fill"></i>
     <p class="mb-0">
-      {% if payments %}Select an employee to see their payment details. {% else
-      %}No payments for {{ selected|date:"F Y" }}. Payments appear when a
-      payroll is approved.{% endif %}
+      {% if payments %} Select an employee to see their payment details. {% else%}No payments for {{ selected|date:"F Y" }}. Payments appear when a
+      payroll is approved. {% endif %}
     </p>
   </div>
 </div>

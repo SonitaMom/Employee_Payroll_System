@@ -186,6 +186,7 @@ def attendance(request):
     dept = request.GET.get("dept", "")
     status = request.GET.get("status", "")
     dept_id = int(dept) if dept.isdigit() else None
+    now = timezone.now()
 
     qs = (Attendance.objects.select_related("employee__department")
           .filter(date__range=[start, end]))
@@ -202,6 +203,11 @@ def attendance(request):
     for i, a in enumerate(page):
         a.row_no =total-offset-i
 
+    total_absent = Attendance.objects.filter(date=now.date(), status=Attendance.StatusChoices.ABSENT).count()
+    total_present = Attendance.objects.filter(date=now.date(), status=Attendance.StatusChoices.PRESENT).count()
+    total_leave = Attendance.objects.filter(date=now.date(), status=Attendance.StatusChoices.LEAVE).count()
+    total_ot_hours = Attendance.objects.filter(date=now.date()).aggregate(Sum('ot_hours'))['ot_hours__sum'] or 0
+
     return render(request, "attendance/attendance.html", {
         "title": "Attendance",
         "page" : page,
@@ -210,6 +216,10 @@ def attendance(request):
         "statuses": Attendance.StatusChoices.choices,
         "start": start, "end":end, "dept":dept, "status":status,
         "employees": employees_data(),
+        "total_absent": total_absent,
+        "total_present": total_present,
+        "total_leave":total_leave,
+        "total_ot_hours": total_ot_hours,
     })
 
 
@@ -608,17 +618,25 @@ def payments_test(request):
     # if false back toc current month 
     today=date.today()
     try:
-        year, month = map(int, request.GET.get("month", "").split("-"))
-        selected=date(year, month,1)
+        selected_month = int(request.GET.get("month", today.month))
+        if not 1 <= selected_month <=12:
+            raise ValueError
     except ValueError:
-        selected=today.replace(day=1)
+        selected_month=today.month
 
-    #12 months
-    base=today.year *12 +today.month -1
-    months =[date((base +i) // 12, (base +i) %12 +1,1) for i in range(-12,13)]
+    # Year selected from 2000 to 
+    
+    try:
+        selected_year = int( request.GET.get("year", today.year))
+    except ValueError:
+        selected_year= today.year
+        
+    # year and month select options
+    months = [(i, calendar.month_name[i]) for i in range(1,13)]
+    years = range(today.year - 5, today.year +5) # 5 year back
 
-    month_qs=Payment.objects.select_related("payroll__employee").filter(payroll__pay_period__year=selected.year,
-                payroll__pay_period__month=selected.month)
+    month_qs=Payment.objects.select_related("payroll__employee").filter(payroll__pay_period__year=selected_year,
+                payroll__pay_period__month=selected_month)
 
     def total(status=None):
         qs=month_qs.filter(status=status) if status else month_qs
@@ -647,8 +665,8 @@ def payments_test(request):
 
     # Approved payrolls of this month that have no payment yet (for "+ Add Payment")
     available_payrolls = Payroll.objects.select_related("employee").filter(
-        pay_period__year=selected.year,
-        pay_period__month=selected.month,
+        pay_period__year=selected_year,
+        pay_period__month=selected_month,
         status=Payroll.StatusChoices.APPROVED,
         payment__isnull=True,
     )
@@ -659,8 +677,10 @@ def payments_test(request):
 
     return render(request, "payments/payment.html", {
         "title": "Payment",
+        "selected_year": selected_year,
+        "selected_month": selected_month,
         "months": months,
-        "selected": selected,
+        "years": years,
         "page": page,
         "status": status,
         "q": q,
@@ -676,23 +696,32 @@ def payments_test(request):
 @login_required
 @permission_required("main.view_payment", raise_exception=True)
 def payment_details(request):
-    """Separate page: pick an employee, see their employee / payroll / payment info."""
+# if false back toc current month 
     today=date.today()
     try:
-            year, month = map(int, request.GET.get("month", "").split("-"))
-            selected=date(year, month,1)
+        selected_month = int(request.GET.get("month", today.month))
+        if not 1 <= selected_month <=12:
+            raise ValueError
     except ValueError:
-            selected=today.replace(day=1)
+        selected_month=today.month
+
+    # Year selected from 2000 to 
     
-        #12 months
-    base=today.year *12 +today.month -1
-    months =[date((base +i) // 12, (base +i) %12 +1,1) for i in range(-12,13)]
- 
+    try:
+        selected_year = int( request.GET.get("year", today.year))
+    except ValueError:
+        selected_year= today.year
+        
+    # year and month select options
+    months = [(i, calendar.month_name[i]) for i in range(1,13)]
+    years = range(today.year - 5, today.year +5) # 5 year back
+
+   
     payments = Payment.objects.select_related(
         "payroll__employee__department", "payroll__employee__position"
     ).filter(
-        payroll__pay_period__year=selected.year,
-        payroll__pay_period__month=selected.month,
+        payroll__pay_period__year=selected_year,
+        payroll__pay_period__month=selected_month,
     ).order_by("payroll__employee__first_name", "payroll__employee__last_name")
  
     payment = None
@@ -703,7 +732,9 @@ def payment_details(request):
     return render(request, "payments/paymentDetail.html", {
         "title": "Payment Details",
         "months": months,
-        "selected": selected,
+        "selected_year": selected_year,
+        "years": years,
+        "selected_month": selected_month,
         "payments": payments,
         "payment": payment,
     })

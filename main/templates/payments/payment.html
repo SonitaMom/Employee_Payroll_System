@@ -13,8 +13,14 @@
     <div class="d-flex align-items-center justify-content-between gap-3">
         <form action="" method="get">
             <select name="month" id="" class="month-select" onchange="this.form.submit()"> 
-                {% for m in months %}
-                <option value="{{ m|date:'Y-m' }}" {% if m == selected %}selected{% endif %}>{{ m|date:"F Y" }}</option>
+                {% for m, name in months %}
+                <option value="{{ m }}" {% if m == selected_month %}selected{% endif %}>{{ name }}</option>
+                {% endfor %}
+            </select>
+
+            <select name="year" id="" onchange="this.form.submit()" class="month-select">
+                {% for y in years %}
+                <option value="{{ y }}" {% if y == selected_year %}selected{% endif %}>{{ y }}</option>
                 {% endfor %}
             </select>
         </form>
@@ -35,14 +41,13 @@
 {% endif %}
  
 <div class="pay-stats mx-3  row g-4 g-lg-5">
-    <div class=" col-6 col-xl-4 ">
+    <div class="col-6 col-xl-4 ">
         <div class="pay-stat total">
             <div class="pay-stat-icon pay-wallet">
                 <i class="bi bi-wallet2 "></i>
-            
             </div>
-            <div>
-                <p>Total this month</p>
+            <div >
+                <p class="text-muted">Total this month</p>
                 <strong>${{ total|floatformat:0 }}</strong>
             </div>
         </div>
@@ -55,8 +60,8 @@
                 
             </div>
             <div>
-                <p>Waiting to be paid</p>
-                <strong>${{ pending|floatformat:0 }}</strong>
+                <p class="text-muted">Waiting to be paid</p>
+                <strong class="pay-stat-value">${{ pending|floatformat:0 }}</strong>
             </div>
         </div>
     </div>
@@ -64,11 +69,9 @@
         <div class="pay-stat paid">
              <div class="pay-stat-icon pay-paid">
              <i class="bi bi-hourglass-split "></i>
-           
-        
         </div>
         <div>
-             <p>Already paid</p>
+             <p class="text-muted">Already paid</p>
 <strong>${{ paid|floatformat:0 }}</strong>
         </div>
         </div>
@@ -104,7 +107,7 @@
     <table class="table align-middle mb-0 mt-2">
         <thead class="table-light text-uppercase">
             <tr class="text-center table-head">
-                <th >#</th>
+                <th >No.</th>
                 <th class="text-start">Employee's name</th>
                 <th>Amount</th>
                 <th>Payment Date</th>
@@ -148,7 +151,7 @@
                     </td>
                 </tr>
             {% empty %}
-            <tr><td colspan="7" class="empty">No payments for {{ selected|date:"F Y" }}.Payments appear here when you approve a payroll.</td></tr>
+            <tr><td colspan="7" class="empty text-center text-muted">No payments for {{ selected|date:"F Y" }}. Payments appear here when you approve a payroll.</td></tr>
             {% endfor %}
             </tr>
            
