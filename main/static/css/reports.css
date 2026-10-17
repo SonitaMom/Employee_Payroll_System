@@ -1,0 +1,50 @@
+/* Reports page: bigger charts, one under the other, and a donut that stays round */
+
+/* On screen and on paper the donut lives in its own box */
+.chart-container.donut-box {
+  width: 100%;
+  max-width: 300px;
+  height: 270px !important;
+  margin: 0 auto;
+}
+
+@media print {
+  /* Keep colours even when "Background graphics" is unticked */
+  *, *::before, *::after {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Charts one under the other (bar chart first, donut below it), full width */
+  .report-charts-row {
+    flex-direction: column !important;
+    flex-wrap: nowrap !important;
+    gap: 12px !important;
+  }
+  .report-charts-row > div {
+    flex: 0 0 auto !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+  .col-print-7 { order: 1; }
+  .col-print-5 { order: 2; }
+
+  /* Sizes on paper (they were only 190px high) */
+  .chart-container { height: 220px !important; }
+  .chart-container.donut-box {
+    width: 300px !important;
+    max-width: 100% !important;
+    height: 270px !important;
+  }
+
+  /* The old rule forced 190px on every canvas and stretched the donut.
+     "contain" keeps the picture's own shape, so a circle is always a circle. */
+  .chart-container canvas {
+    width: 100% !important;
+    height: 100% !important;
+    max-width: 100% !important;
+    object-fit: contain;
+  }
+
+  .chart-title { font-size: 0.95rem !important; }
+}
