@@ -58,7 +58,6 @@ def logout_view(request):
 
 
 @login_required
-@permission_required("main.view_dashboard", raise_exception=True)
 def dashboard(request):
     now = timezone.now()
     total_employees = Employee.objects.count()
