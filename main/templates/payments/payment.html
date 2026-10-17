@@ -1,0 +1,201 @@
+{% extends 'base.html' %}
+{% block title %}Payment | PayPro{% endblock %}
+{% load static %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/payment.css' %}">
+{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center m-3">
+    <div class="payment-head">
+        <h1>Payment</h1>
+        <p class="mt-2">Home / Payments</p>
+    </div>
+    <div class="d-flex align-items-center justify-content-between gap-3">
+        <form action="" method="get">
+            <select name="month" id="" class="month-select" onchange="this.form.submit()"> 
+                {% for m in months %}
+                <option value="{{ m|date:'Y-m' }}" {% if m == selected %}selected{% endif %}>{{ m|date:"F Y" }}</option>
+                {% endfor %}
+            </select>
+        </form>
+        <a href="{% url 'payment_details' %}?month={{ selected|date:'Y-m' }}" class="btn btn-primary">
+            <i class="bi bi-person-lines-fill me-1"></i> Check Details
+        </a>
+    </div>
+</div>
+
+<!-- Summary payment -->
+
+{% if messages %}
+<div class="mx-3">
+    {% for message in messages %}
+    <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} py-2">{{ message }}</div>
+    {% endfor %}
+</div>
+{% endif %}
+ 
+<div class="pay-stats mx-3  row g-4 g-lg-5">
+    <div class=" col-6 col-xl-4 ">
+        <div class="pay-stat total">
+            <div class="pay-stat-icon pay-wallet">
+                <i class="bi bi-wallet2 "></i>
+            
+            </div>
+            <div>
+                <p>Total this month</p>
+                <strong>${{ total|floatformat:0 }}</strong>
+            </div>
+        </div>
+       
+    </div>
+    <div class=" col-6 col-xl-4">
+        <div class="pay-stat pending">
+            <div class="pay-stat-icon pay-pending">
+                 <i class="bi bi-check-circle-fill "></i>
+                
+            </div>
+            <div>
+                <p>Waiting to be paid</p>
+                <strong>${{ pending|floatformat:0 }}</strong>
+            </div>
+        </div>
+    </div>
+    <div class=" col-6 col-xl-4">
+        <div class="pay-stat paid">
+             <div class="pay-stat-icon pay-paid">
+             <i class="bi bi-hourglass-split "></i>
+           
+        
+        </div>
+        <div>
+             <p>Already paid</p>
+<strong>${{ paid|floatformat:0 }}</strong>
+        </div>
+        </div>
+             </div>
+</div>
+
+
+<!-- Payment Table  -->
+
+
+<div class="payment-table mx-5 my-3">
+    <div class="bar d-flex align-items-center flex-wrap  p-3 justify-content-between">
+        
+       
+                <form method="get" class="d-flex gap-2">
+                    <input type="hidden" name="month" value="{{ selected|date:'Y-m' }}">
+                    {% if status %}<input type="hidden" name="status" value="{{ status }}">{% endif %}
+                    <input type="search" name="q" value="{{ q }}" placeholder="Search employee" aria-label="Search employee" class="search py-2 px-3">
+                    <button class="btn btn-outline-secondary">Search</button>
+                </form>
+            
+            
+                <div class="chips d-flex gap-4">
+                    <a class="chip {% if not status %}on{% endif %}" href="?month={{ selected|date:'Y-m' }}{% if q %}&q={{ q|urlencode }}{% endif %}">All</a>
+                    <a class="chip {% if status == 'Pending' %}on{% endif %}" href="?month={{ selected|date:'Y-m' }}&status=Pending{% if q %}&q={{ q|urlencode }}{% endif %}">Pending</a>
+                    <a class="chip {% if status == 'Completed' %}on{% endif %}" href="?month={{ selected|date:'Y-m' }}&status=Completed{% if q %}&q={{ q|urlencode }}{% endif %}">Paid</a>
+                    <a class="chip {% if status == 'Failed' %}on{% endif %}" href="?month={{ selected|date:'Y-m' }}&status=Failed{% if q %}&q={{ q|urlencode }}{% endif %}">Failed</a>
+                </div>
+         
+       
+    </div>
+ <div class="payment-datagrid table-responsive">
+    <table class="table align-middle mb-0 mt-2">
+        <thead class="table-light text-uppercase">
+            <tr class="text-center table-head">
+                <th >#</th>
+                <th class="text-start">Employee's name</th>
+                <th>Amount</th>
+                <th>Payment Date</th>
+                <th>Method</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for p in page %}
+            <tr class="text-center payment-info">
+                    <td >{{ page.start_index|add:forloop.counter0 }}</td>
+                    <td class="text-start">
+                        <div class="who d-flex justify-content-start gap-3 align-items-center">
+                            <span class="avatar avatar-{{ p.payroll.employee.sex|lower }}">{{ p.payroll.employee.first_name|slice:":1"|upper }}{{ p.payroll.employee.last_name|slice:":1"|upper }}</span>
+                            {{ p.payroll.employee.full_name }}
+                        </div>
+                    </td>
+                    <td class=" fw-bold">${{ p.amount|floatformat:0 }}</td>
+                    <td>{{ p.payment_date|date:"d M Y"|default:"Not set" }}</td>
+                    <td>{{ p.payment_method|default:"Not set" }}</td>
+                    <td>
+                        <span class="status-pill status-{{ p.status|lower }}">
+                            {% if p.status == "Completed" %}<i class="bi bi-check-circle-fill"></i>
+                            {% elif p.status == "Pending" %}<i class="bi bi-clock-fill"></i>
+                            {% else %}<i class="bi bi-x-circle-fill"></i>{% endif %}
+                            {{ p.status }}
+                        </span>
+                    </td>
+                    <td>
+                        {% if p.status != "Completed" %}
+                        <button type="button" class="btn btn-sm btn-success pay-btn"
+                                data-bs-toggle="modal" data-bs-target="#payModal"
+                                data-url="{% url 'payment_complete' p.pk %}"
+                                data-name="{{ p.payroll.employee.full_name }}"
+                                data-amount="{{ p.amount|floatformat:2 }}"
+                                data-method="{{ p.payment_method }}">Pay</button>
+                        {% else %}
+                        <span class="text-muted small">Done</span>
+                        {% endif %}
+                    </td>
+                </tr>
+            {% empty %}
+            <tr><td colspan="7" class="empty">No payments for {{ selected|date:"F Y" }}.Payments appear here when you approve a payroll.</td></tr>
+            {% endfor %}
+            </tr>
+           
+        </tbody>
+    </table>
+     
+ </div>
+ {% if page.paginator.num_pages > 1 %}
+    <div class="d-flex justify-content-between align-items-center p-3 border-top">
+        <small class="text-muted">Page {{ page.number }} of {{ page.paginator.num_pages }}</small>
+        <div class="d-flex gap-2">
+            {% if page.has_previous %}<a class="btn btn-sm btn-outline-secondary" href="?{{ keep }}&page={{ page.previous_page_number }}">Previous</a>{% endif %}
+            {% if page.has_next %}<a class="btn btn-sm btn-outline-secondary" href="?{{ keep }}&page={{ page.next_page_number }}">Next</a>{% endif %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- PAY MODAL -->
+<div class="modal fade" id="payModal" tabindex="-1" aria-labelledby="payLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <form method="post" id="payForm" class="modal-content">
+            {% csrf_token %}
+            <input type="hidden" name="next" value="{{ request.get_full_path }}">
+            <div class="modal-header">
+                <h5 class="modal-title" id="payLabel">Complete payment</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p class="mb-3">Pay <strong id="payName"></strong> <strong id="payAmount"></strong></p>
+                <label class="form-label d-block">Method</label>
+                <div class="method-seg" id="payMethods">
+                    {% for m in methods %}
+                    <input type="radio" name="payment_method" id="pay_m{{ forloop.counter }}" value="{{ m }}" required>
+                    <label for="pay_m{{ forloop.counter }}">{{ m }}</label>
+                    {% endfor %}
+                </div>
+                <div class="form-text mt-2">Today's date is recorded as the payment date.</div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                <button type="submit" class="btn btn-success">Mark as paid</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script src="{% static 'js/payment/payment.js' %}"></script>
+{% endblock %}
