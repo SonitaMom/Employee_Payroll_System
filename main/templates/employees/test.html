@@ -132,7 +132,7 @@
             <td class="text-center">
               <button class="paypro-action-btn edit-emp-btn me-1" title="Edit"><i class="bi bi-pencil-square"></i></button>
               <form action="{% url 'employee_list' %}" method="POST" class="d-inline" onsubmit="return confirm('Delete this employee profile?');">
-                {% csrf_token %}
+              {% csrf_token %}
                 <input type="hidden" name="action" value="delete">
                 <input type="hidden" name="employee_id" value="{{ emp.employee_id }}">
                 <button type="submit" class="paypro-action-btn btn-delete" title="Delete"><i class="bi bi-trash"></i></button>

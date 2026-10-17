@@ -8,6 +8,9 @@ document.addEventListener("DOMContentLoaded", function () {
 
     const ctxDept = document.getElementById("deptChart");
     if (ctxDept) {
+      // The donut sits in its own box (size set in reports.css), so it stays round.
+      ctxDept.parentElement.classList.add("donut-box");
+
       new Chart(ctxDept, {
         type: "doughnut",
         data: {
@@ -22,9 +25,11 @@ document.addEventListener("DOMContentLoaded", function () {
         options: {
           responsive: true,
           maintainAspectRatio: false,
+          devicePixelRatio: Math.max(window.devicePixelRatio || 1, 2),
           plugins: {
             legend: {
-              position: "bottom"
+              position: "bottom",
+              labels: { font: { size: 12 }, padding: 14 }
             }
           }
         }
@@ -49,21 +54,28 @@ document.addEventListener("DOMContentLoaded", function () {
             label: "Payroll Expenditure ($)",
             data: amounts,
             backgroundColor: "#2563eb",
-            borderRadius: 6
+            borderRadius: 6,
+            maxBarThickness: 48   // one month no longer makes one giant bar
           }]
         },
         options: {
           responsive: true,
           maintainAspectRatio: false,
+          devicePixelRatio: Math.max(window.devicePixelRatio || 1, 2),
+          plugins: {
+            legend: { labels: { font: { size: 12 } } }
+          },
           scales: {
             y: {
               beginAtZero: true,
               ticks: {
+                font: { size: 12 },
                 callback: function (val) {
                   return "$" + val.toLocaleString();
                 }
               }
-            }
+            },
+            x: { ticks: { font: { size: 12 } } }
           }
         }
       });

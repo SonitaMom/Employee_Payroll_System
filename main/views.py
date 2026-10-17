@@ -900,3 +900,15 @@ def teammate_placeholder(request):
         "<a href='/payslips/'>Go to Payslips</a> | "
         "<a href='/reports/'>Go to Reports</a></p>"
     )
+def employee_create(request):
+    if request.method == "POST":
+        # Check if form.save() or Employee.objects.create(...) is called
+        form = EmployeeForm(request.POST, request.FILES)
+        if form.is_valid():
+            form.save()
+            return redirect("employee_test")
+        else:
+            print("Form errors:", form.errors)  # This will print in terminal if validation fails
+    else:
+        form = EmployeeForm()
+    return render(request, "employees/create.html", {"form": form})

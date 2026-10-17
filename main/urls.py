@@ -9,14 +9,15 @@ urlpatterns = [
     path("dashboard/", views.dashboard, name="dashboard"),
 
 
-    path("employees/test/", views.employee_test, name="employee_test"),
+    # path("employees/test/", views.employee_test, name="employee_test"),
+
+    path("employees/", views.employee_list, name="employee_list"),
+    path("employees/test/", views.employee_list, name="employee_test"),
+
+    # path("departments/test/", views.department_test, name="department_test"),
 
 
-
-    path("departments/test/", views.department_test, name="department_test"),
-
-
-    path("positions/test/", views.position_test, name="position_test"),
+    # path("positions/test/", views.position_test, name="position_test"),
 
     path("attendance/", views.attendance, name="attendance"),
     path("attendance/record/", views.attendance_record, name="attendance_record"),
@@ -35,10 +36,10 @@ urlpatterns = [
     path("payments/test/", views.payments_test, name="payments_test"),
 
 
-    path("payslips/test/", views.payslips_test, name="payslips_test"),
+    # path("payslips/test/", views.payslips_test, name="payslips_test"),
 
 
-    path("reports/", views.report_dashboard, name="reports_dashboard"),
+    # path("reports/", views.report_dashboard, name="reports_dashboard"),
 
 
 
@@ -49,24 +50,21 @@ urlpatterns = [
     path("test/", views.test, name="test"),
 
 
-     # Anna's 5 Modules
-    # Employees
+    # Anna's 5 modules (sidebar A)
+    # The "/test/" addresses are kept, but now they open the REAL pages with data
+    # (before, they opened the empty placeholder views, so no data was loaded).
     path("employees/", views.employee_list, name="employee_list"),
     path("employees/test/", views.employee_list, name="employee_test"),
 
-    # Departments
     path("departments/", views.department_list, name="department_list"),
     path("departments/test/", views.department_list, name="department_test"),
 
-    # Positions
     path("positions/", views.position_list, name="position_list"),
     path("positions/test/", views.position_list, name="position_test"),
 
-    # Payslips
     path("payslips/", views.payslip_list, name="payslip_list"),
     path("payslips/test/", views.payslip_list, name="payslips_test"),
 
-    # Reports
     path("reports/", views.report_dashboard, name="reports"),
-path("reports/dashboard/", views.report_dashboard, name="reports_dashboard"),
+    path("reports/dashboard/", views.report_dashboard, name="reports_dashboard"),
 ]
