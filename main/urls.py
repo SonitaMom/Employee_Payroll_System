@@ -21,11 +21,14 @@ urlpatterns = [
 
     path("attendance/", views.attendance, name="attendance"),
     path("attendance/record/", views.attendance_record, name="attendance_record"),
-    path("attendance/add/", views.attendance_add, name="attendance_add"),
-    path("attendance/<int:pk>/edit/", views.attendance_edit, name="attendance_edit"),
-    path("attendance/test/", views.attendance_edit, name="attendance_test"),
+    # path("attendance/add/", views.attendance_add, name="attendance_add"),
+    # path("attendance/<int:pk>/edit/", views.attendance_edit, name="attendance_edit"),
+    path("attendance/<int:pk>/mark/", views.attendance_mark, name="attendance_mark"),
+    # path("attendance/test/", views.attendance_edit, name="attendance_test"),
     path("attendance/", views.attendance, name="attendance"),
-    path("attendance/test/", views.attendance_edit, name="attendance_test"),
+    # path("attendance/test/", views.attendance_edit, name="attendance_test"),
+
+
     path("payroll/", views.payroll, name="payroll"),
     path("payroll/new-payroll", views.new_payroll, name="new_payroll"),
     path("payroll/update/<int:payroll_id>/", views.update_payroll, name="update_payroll"),
