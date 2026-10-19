@@ -10,19 +10,21 @@
 {% block content %}
 <div class="container-fluid px-3 py-2">
 
-    <!-- Top Action Toolbar -->
+    {% if perms.main.add_payroll %}
     <div class="d-flex justify-content-end mb-3">
         <a href="{% url 'new_payroll' %}" class="btn btn-primary-custom d-inline-flex align-items-center gap-2">
             <i class="bi bi-plus-lg"></i>
             <span>Add Payroll</span>
         </a>
     </div>
+    {% endif %}
 
     <!-- Feedback messages -->
     {% if messages %}
     <div class="mb-3">
         {% for m in messages %}
-        <div class="alert alert-{% if m.tags == 'error' %}danger{% else %}{{ m.tags }}{% endif %} alert-dismissible fade show" role="alert">
+        <div class="alert alert-{% if m.tags == 'error' %}danger{% else %}{{ m.tags }}{% endif %} alert-dismissible fade show"
+            role="alert">
             {{ m }}
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
@@ -47,7 +49,8 @@
 
             <div class="col-12 col-sm-6 col-md-2">
                 <label for="year" class="form-label small fw-semibold text-muted mb-1">Year</label>
-                <input type="number" name="year" id="year" class="form-control" value="{{ year }}" min="2000" max="2100" required>
+                <input type="number" name="year" id="year" class="form-control" value="{{ year }}" min="2000" max="2100"
+                    required>
             </div>
 
             <div class="col-12 col-sm-8 col-md-5">
@@ -56,7 +59,8 @@
                     <span class="input-group-text bg-white border-end-0 text-muted">
                         <i class="bi bi-search"></i>
                     </span>
-                    <input type="search" name="search" id="search" class="form-control border-start-0" placeholder="Search by name or ID..." value="{{ search }}">
+                    <input type="search" name="search" id="search" class="form-control border-start-0"
+                        placeholder="Search by name or ID..." value="{{ search }}">
                 </div>
             </div>
 
@@ -95,7 +99,9 @@
                         <th>Pay Period</th>
                         <th>Net Salary</th>
                         <th>Status</th>
+                        {% if perms.main.change_payroll %}
                         <th class="text-center" style="width: 90px;">Action</th>
+                        {% endif %}
                     </tr>
                 </thead>
 
@@ -129,12 +135,15 @@
                             </span>
                             {% endif %}
                         </td>
+                        {% if perms.main.change_payroll %}
                         <td class="text-center">
-                            <a href="{% url 'update_payroll' payroll.payroll_id %}" class="btn btn-sm btn-outline-primary" title="Edit payroll">
+                            <a href="{% url 'update_payroll' payroll.payroll_id %}"
+                                class="btn btn-sm btn-outline-primary" title="Edit payroll">
                                 <i class="bi bi-pencil-square"></i>
                                 <span class="d-none d-md-inline ms-1">Edit</span>
                             </a>
                         </td>
+                        {% endif %}
                     </tr>
                     {% empty %}
                     <tr>

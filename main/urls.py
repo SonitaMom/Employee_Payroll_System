@@ -8,14 +8,9 @@ urlpatterns = [
     path("logout/", views.logout_view, name="logout"),
     path("dashboard/", views.dashboard, name="dashboard"),
 
-
-    # path("employees/test/", views.employee_test, name="employee_test"),
-
     path("employees/", views.employee_list, name="employee_list"),
-    path("employees/test/", views.employee_list, name="employee_test"),
 
     # path("departments/test/", views.department_test, name="department_test"),
-
 
     # path("positions/test/", views.position_test, name="position_test"),
 
@@ -40,24 +35,13 @@ urlpatterns = [
 
     # path("payslips/test/", views.payslips_test, name="payslips_test"),
 
-
     # path("reports/", views.report_dashboard, name="reports_dashboard"),
 
-
-
     path("settings/", views.settings, name="settings"),
-
-
-    #test
-    path("test/", views.test, name="test"),
-
 
     # Anna's 5 modules (sidebar A)
     # The "/test/" addresses are kept, but now they open the REAL pages with data
     # (before, they opened the empty placeholder views, so no data was loaded).
-    path("employees/", views.employee_list, name="employee_list"),
-    path("employees/test/", views.employee_list, name="employee_test"),
-
     path("departments/", views.department_list, name="department_list"),
     path("departments/test/", views.department_list, name="department_test"),
 
