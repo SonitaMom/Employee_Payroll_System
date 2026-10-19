@@ -3,16 +3,40 @@ from .models import Attendance, Payroll, PayrollItem
 from django.forms import inlineformset_factory
 
 
-class AttendanceForm(forms.ModelForm):
-    class Meta:
-        model  = Attendance
-        fields = ["employee", "check_in", "check_out", "status"]
+# class AttendanceForm(forms.ModelForm):
+#     class Meta:
+#         model  = Attendance
+#         fields = ["employee", "check_in", "check_out", "status"]
 
 
 class AttendanceEditForm(forms.ModelForm):
     class Meta:
         model  = Attendance
         fields = ["check_in", "check_out", "status"]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["check_in"].required=False
+        self.fields["check_out"].required = False
+
+    def clean(self):
+        data=super().clean()
+        status = data.get("status")
+        if not status:
+            return data
+
+
+        if status == Attendance.StatusChoices.PRESENT:
+            ci, co = data.get("check_in"), data.get("check_out")
+            if not ci:
+                self.add_error("check_in", "Enter the check-in time.")
+            elif co and co <= ci:
+                self.add_error("check_out", "Check-out must be after check-in.")
+        else:
+            data["check_in"]=None
+            data["check_out"]=None
+        return data
+            
 
 
 class PayrollForm(forms.ModelForm):

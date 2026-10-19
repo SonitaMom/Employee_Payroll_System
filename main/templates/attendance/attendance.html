@@ -8,7 +8,7 @@
 
 {% block content %}
 <div>
-  <p>Saturday, 17 October 2026</p>
+  <p>{{ day|date:"l, j F Y"}}</p>
 <div class="d-flex align-items-center justify-content-between attendance-head mx-3">
   <div>
     <h1 class="m-0">Employee Attendance</h1>
@@ -16,12 +16,12 @@
   <!-- <button type="button" class="btn btn-primary" id="btnAdd">+ Add Attendance</button>
     -->
   <div>
-    <div>
-      <a href="" class="sq" arai-label="Previous day"><</a>
+    <div class="d-flex align-items-center justify-content-center">
+      <a href="{{ prev_url }}" class="sq" arai-label="Previous day">&lsaquo;</a>
       <form action="" method="get">
         <input type="date" name="date" value="{{day|date:'Y-m-d'}}" onchange="this.form.submit()" aria-label="Choose date">
       </form>
-      <a href="" class="sq" aria-label="Next day">></a>
+      <a href="{{ next_url }}" class="sq" aria-label="Next day">&rsaquo;</a>
     </div>
   </div>
 </div>
@@ -74,7 +74,7 @@
           <span class="text-muted">Overtime</span>
         </div>
         
-        <strong class="number">{{total_ot_hours}}</strong>
+        <strong class="number">{{total_ot_hours}}h</strong>
       </div>
     </div>
   </div>
@@ -88,19 +88,19 @@
 
 <div class="attendance-table my-3 p-3">
   <div>
-    <h3>Check-in log</h3>
+    <h2>Check-in log</h2>
   </div>
   <form method="get" class="row g-3 mb-3">
     <!-- <div class="col-3"><input type="date" name="start" value="{{ start }}" class="form-control" /></div>
     <div class="col-3"><input type="date" name="end" value="{{ end }}" class="form-control" /></div> -->
     <div class="col-3">
-      <input type="search" name="" value="" placeholder="Search employee name..." aria-label="Search employee" class="search">
+      <input type="search" name="q" value="" placeholder="Search employee name..." aria-label="Search employee" class="search">
     </div>
     <div class="col-2">
-      <select name="dept" class="form-select">
+      <select name="dept" class="form-select" onchange="this.form.submit()" aria-label="Department">
         <option value="">All Departments</option>
         {% for d in departments %}
-        <option value="{{ d.pk }}" {% if d.pk == dept_id %}selected{% endif %}>{{ d.name }}</option>
+        <option value="{{ d.pk }}" {% if d.pk == d.pk|stringformat:"s" %}selected{% endif %}>{{ d.name }}</option>
         {% endfor %}
       </select>
     </div>
@@ -131,41 +131,94 @@
         </tr>
       </thead>
       <tbody>
-        {% for a in page %}
-        <tr class="text-center">
-          <td>{{ a.row_no }}</td>
-          <!-- <td>{{ a.date|date:"d/m/Y" }}</td> -->
-          <!-- <td>{{ a.employee.full_name }}</td> -->
-          <td class="text-start ps-5">
-            <div class="who d-flex justify-content-start gap-3 align-items-center">
-              <span class="avatar avatar-{{ a.employee.sex|lower }}"> {{a.employee.first_name|slice:"1"|upper}}{{a.employee.last_name|slice:"1"|upper}}</span>
-              <div class="d-block">
-                <p class="m-0">{{a.employee.full_name}}</p>
-                <p class="text-muted m-0">{{a.employee.department}}</p>
-              </div>
+        {% for e, a in rows %}
+      <tr class="text-center">
+        <td>{{ page.start_index|add:forloop.counter0 }}</td>
+        <td class="text-start ps-5">
+          <div class="who d-flex justify-content-start gap-3 align-items-center">
+            <span class="avatar avatar-{{ e.sex|lower }}">{{ e.first_name|slice:":1"|upper }}{{ e.last_name|slice:":1"|upper }}</span>
+            <div>
+              <p class="m-0">{{ e.full_name }}</p>
+              <p class="text-muted m-0">{{ e.department }}</p>
             </div>
-          </td>
-          <!-- <td>{{ a.employee.department }}</td> -->
-          <td>{{ a.check_in|time:"H:i"|default:"-" }}</td>
-          <td>{{ a.check_out|time:"H:i"|default:"-" }}</td>
-          <td>{{ a.ot_hours }}h</td>
-          <td><span class="badge text-bg-{{ a.badge }}">{{ a.status }}</span></td>
-          <td>
-            <button type="button" class="btn btn-sm btn-outline-primary" data-edit
-              data-url="{% url 'attendance_edit' a.pk %}" data-date="{{ a.date|date:'d/m/Y' }}"
-              data-dept="{{ a.employee.department_id }}" data-emp="{{ a.employee.pk }}"
-              data-cin="{{ a.check_in|time:'H:i' }}" data-cout="{{ a.check_out|time:'H:i' }}"
-              data-status="{{ a.status }}">Edit</button>
-          </td>
-        </tr>
-        {% empty %}
-        <tr>
-          <td colspan="9" class="text-center text-muted">No data</td>
-        </tr>
-        {% endfor %}
+          </div>
+        </td>
+        <td>{{ a.check_in|time:"H:i"|default:"-" }}</td>
+        <td>
+          {% if a.check_out %}{{ a.check_out|time:"H:i" }}
+          {% elif a.check_in %}Working
+          {% else %}-{% endif %}
+        </td>
+        <td>{% if a %}{{ a.ot_hours }}h{% else %}-{% endif %}</td>
+        <td>
+          {% if a %}<span class="badge text-bg-{{ a.badge }}">{{ a.get_status_display }}</span>
+          {% else %}<span class="badge s-none">Not marked</span>{% endif %}
+        </td>
+        <td>
+          <button type="button" class="btn btn-sm btn-outline-primary" data-mark
+            data-url="{% url 'attendance_mark' e.pk %}"
+            data-name="{{ e.full_name }}"
+            data-dept="{{ e.department }}"
+            data-status="{{ a.status }}"
+            data-in="{{ a.check_in|time:'H:i' }}"
+            data-out="{{ a.check_out|time:'H:i' }}">
+            {% if a %}Edit{% else %}Mark{% endif %}
+          </button>
+        </td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="7" class="text-center text-muted">No data</td></tr>
+      {% endfor %}
       </tbody>
     </table>
   </div>
+
+  <!-- Attendance Mark  -->
+<dialog id="markDialog" data-shift-end="{{ shift_end|time:'H:i' }}">
+  <form method="post" id="markForm" class="mark-box">
+    {% csrf_token %}
+    <input type="hidden" name="date" value="{{ day|date:'Y-m-d' }}">
+    <input type="hidden" name="next" value="{{ request.get_full_path }}">
+
+    <h4 id="m_name" class="mb-0"></h4>
+    <p class="text-muted small mb-3"><span id="m_sub"></span> · {{ day|date:"j F Y" }}</p>
+
+    <div class="mb-3">
+      <label class="form-label" for="m_status">Status</label>
+      <select name="status" id="m_status" class="form-select">
+        <option value="">Select status</option>
+        {% for value, label in statuses %}<option value="{{ value }}">{{ label }}</option>{% endfor %}
+      </select>
+    </div>
+
+    <div class="row mb-3">
+      <div class="col">
+        <label class="form-label" for="m_in">Check-in</label>
+        <div class="input-group">
+          <input type="time" name="check_in" id="m_in" class="form-control">
+          <button type="button" class="btn btn-outline-secondary" data-now="m_in">Now</button>
+        </div>
+      </div>
+      <div class="col">
+        <label class="form-label" for="m_out">Check-out</label>
+        <div class="input-group">
+          <input type="time" name="check_out" id="m_out" class="form-control">
+          <button type="button" class="btn btn-outline-secondary" data-now="m_out">Now</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="ot-box">Overtime (after {{ shift_end|time:"H:i" }}) <b id="m_ot">-</b></div>
+    <p id="m_err" class="text-danger small fw-semibold mt-2 mb-0" role="alert"></p>
+
+    <div class="d-flex gap-2 mt-3">
+      <button type="submit" name="clear" value="1" class="btn btn-outline-danger" id="m_clear" formnovalidate>Clear mark</button>
+      <span class="ms-auto"></span>
+      <button type="button" class="btn btn-link" id="m_cancel">Cancel</button>
+      <button type="submit" class="btn btn-primary">Save</button>
+    </div>
+  </form>
+</dialog>
 
   <nav class="mt-3">
     <ul class="pagination justify-content-end">
@@ -184,69 +237,11 @@
   </nav>
 </div>
 
-<!-- Add / Edit popup (outside the table card) -->
-<div class="att-modal" id="attModal" data-add-url="{% url 'attendance_add' %}" data-today="{% now 'd/m/Y' %}">
-  <div class="att-box">
-    <h4 id="m_title" class="mb-1">Add Attendance</h4>
-    <p class="text-muted small mb-3">Date: <b id="m_date"></b> <span id="m_auto">(automatic)</span></p>
 
-    <form method="post" id="attForm">
-      {% csrf_token %}
-      <input type="hidden" name="next" value="{{ request.get_full_path }}">
 
-      <div class="mb-3">
-        <label class="form-label">Department</label>
-        <select name="department" id="m_dept" class="form-select">
-          <option value="">Select department</option>
-          {% for d in departments %}
-          <option value="{{ d.pk }}">{{ d.name }}</option>
-          {% endfor %}
-        </select>
-      </div>
-
-      <div class="mb-3">
-        <label class="form-label">Employee</label>
-        <select name="employee" id="m_emp" class="form-select" required></select>
-
-      </div>
-
-      <div class="row mb-3">
-        <div class="col">
-          <label class="form-label">Check-in</label>
-          <div class="input-group">
-            <input type="time" name="check_in" id="m_in" class="form-control">
-            <button type="button" class="btn btn-outline-secondary" data-now="m_in">Now</button>
-          </div>
-        </div>
-        <div class="col">
-          <label class="form-label">Check-out</label>
-          <div class="input-group">
-            <input type="time" name="check_out" id="m_out" class="form-control">
-            <button type="button" class="btn btn-outline-secondary" data-now="m_out">Now</button>
-          </div>
-        </div>
-      </div>
-
-      <div class="mb-3">
-        <label class="form-label">Status</label>
-        <select name="status" id="m_status" class="form-select">
-          {% for value, label in statuses %}
-          <option value="{{ value }}">{{ label }}</option>
-          {% endfor %}
-        </select>
-      </div>
-
-      <p class="text-muted small">OT is calculated automatically after 17:00. Check-in after 08:15 suggests Late.</p>
-
-      <button class="btn btn-primary">Save</button>
-      <button type="button" class="btn btn-link" id="m_cancel">Cancel</button>
-    </form>
-  </div>
-</div>
-
-{{ employees|json_script:"employees-data" }}
+<!-- {{ employees|json_script:"employees-data" }} -->
 {% endblock %}
 
 {% block extra_js %}
-<script src="{% static 'js/attendance/add.js' %}"></script>
+<script src="{% static 'js/attendance/mark.js' %}"></script>
 {% endblock %}

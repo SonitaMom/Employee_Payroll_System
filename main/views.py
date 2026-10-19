@@ -7,18 +7,36 @@ from django.db.models.functions import TruncMonth
 from django.utils import timezone
 from decimal import Decimal 
 from django.contrib import messages
+
 from django.http import JsonResponse, HttpResponse
 from datetime import date
+
+from django.db.models import Sum, Count, Q
+from django.http import JsonResponse
+from .models import Employee, Department, Position, Payroll, Payment
+from datetime import date, time as dtime, timedelta
+
 from calendar import monthrange
 import calendar
 from main.services.dashboard import get_recent_activities
-from .forms import AttendanceForm, AttendanceEditForm, PayrollForm, PayrollItemFormSet
+
+from .forms import AttendanceEditForm, PayrollForm, PayrollItemFormSet
+
+
+from .forms import AttendanceEditForm, PayrollForm, PayrollItemFormSet
+
 from django.core.paginator import Paginator
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_POST
 
 from django.db import transaction
 from .services.payroll import calculate_payroll
+
+from urllib.parse import urlencode
+
+from django.core.exceptions import PermissionDenied
+from django.db.models import OuterRef, Subquery
+from django.urls import reverse
 
 
 def home(request):
@@ -142,48 +160,94 @@ def employees_data():
         "employee_id", "first_name", "last_name", "department_id"
     ))
 
+
+
+S=Attendance.StatusChoices
+SHIFT_END = dtime(17,0)
+SHIFT_START = dtime(8,0)
+WORKING = {S.PRESENT.value}
+
+def _parse_day(value):
+    try:
+        return date.fromisoformat(value)
+    except (TypeError, ValueError):
+        return timezone.localdate()
+
+def _list_url(day):
+    return reverse("attendance") + "?" + urlencode({"date":day.isoformat()})
+
+def _ot_hours(obj):
+    if obj.status not in WORKING or not obj.check_out:
+        return Decimal("0.00")
+    mins = (obj.check_out.hour * 60 + obj.check_out.minute) - (SHIFT_END.hour * 60 + SHIFT_END.minute)
+    return (Decimal(max(0, mins)) / 60).quantize(Decimal("0.01"))
+
+
 @login_required
 def attendance(request):
-    today=timezone.localdate().isoformat()
-    start = request.GET.get("start", today)
-    end = request.GET.get("end", today)
+    # today=timezone.localdate().isoformat()
+    day = _parse_day(request.GET.get("date"))
+    # start = request.GET.get("start", today)
+    # end = request.GET.get("end", today)
     dept = request.GET.get("dept", "")
     status = request.GET.get("status", "")
-    dept_id = int(dept) if dept.isdigit() else None
-    now = timezone.now()
+    # dept_id = int(dept) if dept.isdigit() else None
+    # now = timezone.now()
+    q=request.GET.get("q", "").strip()
 
-    qs = (Attendance.objects.select_related("employee__department")
-          .filter(date__range=[start, end]))
-    if dept:
-        qs=qs.filter(employee__department_id=dept)
-    if status:
-        qs = qs.filter(status=status)
-    qs = qs.order_by("-date", "-pk")
+    day_status = Subquery(
+        Attendance.objects.filter(employee=OuterRef("pk"), date=day).values("status")[:1]
+    )
+    # employees who were working on that day (same rule as attendance_record)
+    employees = (
+        Employee.objects.select_related("department")
+        # .filter(hire_date__lte=day)
+        # .filter(Q(inactive_date__isnull=True) | Q(inactive_date__gte=day))
+        .annotate(day_status=day_status)
+        .order_by("first_name", "last_name")
+    )
 
-    page=Paginator(qs, 10).get_page(request.GET.get("page"))
+    if dept.isdigit():
+        employees = employees.filter(department_id=dept)
+    if q:
+        employees = employees.filter(Q(first_name__icontains=q) | Q(last_name__icontains=q))
+    if status == "none":
+        employees = employees.filter(day_status__isnull=True)
+    elif status:
+        employees = employees.filter(day_status=status)
 
-    total = page.paginator.count
-    offset = page.start_index()-1 if total else 0
-    for i, a in enumerate(page):
-        a.row_no =total-offset-i
+    # page=Paginator(employee, 10).get_page(request.GET.get("page"))
 
-    total_absent = Attendance.objects.filter(date=now.date(), status=Attendance.StatusChoices.ABSENT).count()
-    total_present = Attendance.objects.filter(date=now.date(), status=Attendance.StatusChoices.PRESENT).count()
-    total_leave = Attendance.objects.filter(date=now.date(), status=Attendance.StatusChoices.LEAVE).count()
-    total_ot_hours = Attendance.objects.filter(date=now.date()).aggregate(Sum('ot_hours'))['ot_hours__sum'] or 0
+    page = Paginator(employees, 10).get_page(request.GET.get("page"))
+
+    records = {a.employee_id: a
+               for a in Attendance.objects.filter(date=day, employee__in=list(page))}
+    rows = [(e, records.get(e.pk)) for e in page]       # (employee, record or None)
+
+    # summary cards for the selected day
+    day_qs = Attendance.objects.filter(date=day)
+    counts = dict(day_qs.values_list("status").annotate(n=Count("pk")))
+    total_ot_hours = day_qs.aggregate(t=Sum("ot_hours"))["t"] or 0
+
+    keep = {k: v for k, v in {"date": day.isoformat(), "q": q, "dept": dept, "status": status}.items() if v}
 
     return render(request, "attendance/attendance.html", {
         "title": "Attendance",
-        "page" : page,
-        "departments" : Department.objects.all(),
-        "dept_id" : dept_id,
-        "statuses": Attendance.StatusChoices.choices,
-        "start": start, "end":end, "dept":dept, "status":status,
-        "employees": employees_data(),
-        "total_absent": total_absent,
-        "total_present": total_present,
-        "total_leave":total_leave,
+        "day": day,
+        "prev_url": _list_url(day - timedelta(days=1)),
+        "next_url": _list_url(day + timedelta(days=1)),
+        "rows": rows,
+        "page": page,
+        "departments": Department.objects.all(),
+        "statuses": S.choices,
+        "dept": dept, "status": status, "q": q,
+        "querystring": urlencode(keep),
+        "shift_end": SHIFT_END,
+        "total_present": counts.get(S.PRESENT, 0),
+        "total_absent": counts.get(S.ABSENT, 0),
+        "total_leave": counts.get(S.LEAVE, 0),
         "total_ot_hours": total_ot_hours,
+        "shift_start": SHIFT_START,
     })
 
 def _back(request):
@@ -192,6 +256,7 @@ def _back(request):
     if nxt and url_has_allowed_host_and_scheme(nxt, allowed_hosts={request.get_host()}):
         return redirect(nxt)
     return redirect("attendance")
+
 
 @login_required
 @permission_required("main.add_attendance", raise_exception=True)
@@ -218,11 +283,37 @@ def attendance_add(request):
 def attendance_edit(request, pk):
     obj  = get_object_or_404(Attendance, pk=pk)
     form = AttendanceEditForm(request.POST, instance=obj)
+
+
+
+@login_required
+@permission_required(["main.add_attendance", "main.change_attendance"], raise_exception=True)
+@require_POST
+def attendance_mark(request, pk):
+    """Create or update one employee's attendance for one day (used by the popup)."""
+    employee = get_object_or_404(Employee, pk=pk)
+    day = _parse_day(request.POST.get("date"))
+    record = Attendance.objects.filter(employee=employee, date=day).first()
+
+    if "clear" in request.POST:
+        if not request.user.has_perm("main.delete_attendance"):
+            raise PermissionDenied
+        if record:
+            record.delete()
+            messages.success(request, f"Cleared the mark for {employee.full_name}.")
+        return _back(request)
+
+    form = AttendanceEditForm(request.POST, instance=record)
+
+
     if form.is_valid():
-        form.save()       
-        messages.success(request, "Attendance updated.")
+        obj = form.save(commit=False)
+        obj.employee, obj.date = employee, day
+        obj.ot_hours = _ot_hours(obj)
+        obj.save()
+        messages.success(request, f"Marked {employee.full_name} as {obj.get_status_display().lower()}.")
     else:
-        messages.error(request, "Could not save. Please check the times.")
+        messages.error(request, " ".join(e for errs in form.errors.values() for e in errs))
     return _back(request)
 
 @login_required
