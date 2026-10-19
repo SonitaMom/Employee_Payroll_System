@@ -6,46 +6,35 @@ from django.db.models import Sum, Count, Q
 from django.db.models.functions import TruncMonth
 from django.utils import timezone
 from decimal import Decimal 
-from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth.decorators import login_required, permission_required
 from django.contrib import messages
-from django.db.models import Sum, Count, Q
-from django.http import JsonResponse
-from .models import Employee, Department, Position, Payroll, Payment
+from django.http import JsonResponse, HttpResponse
 from datetime import date
 from calendar import monthrange
 import calendar
-from django.http import HttpResponse
 from main.services.dashboard import get_recent_activities
-
 from .forms import AttendanceForm, AttendanceEditForm, PayrollForm, PayrollItemFormSet
 from django.core.paginator import Paginator
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_POST
-from django.contrib import messages
 
 from django.db import transaction
 from .services.payroll import calculate_payroll
-from django.shortcuts import render
 
 
 def home(request):
     if request.user.is_authenticated:
         return redirect("dashboard")
-
     return redirect("login")
 
 def login_view(request):
     if request.method == "POST":
         username = request.POST["username"]
         password = request.POST["password"]
-
         user = authenticate(
             request,
             username=username,
             password=password
         )
-
         if user is not None:
             login(request, user)
             return redirect("dashboard")
@@ -53,19 +42,13 @@ def login_view(request):
         return render(request, "login.html", {
             "error": "Invalid username or password."
         })
-
     return render(request, "login.html")
 
 def logout_view(request):
     logout(request)
     return redirect("login")
 
-
-
-
-
 @login_required
-@permission_required("main.view_dashboard", raise_exception=True)
 def dashboard(request):
     now = timezone.now()
     total_employees = Employee.objects.count()
@@ -137,24 +120,6 @@ def dashboard(request):
 
 
 
-
-@login_required
-@permission_required("main.view_employee", raise_exception=True)
-def employee_test(request):
-    return render(request, "employees/test.html", {
-        "title": "test"
-    })
-
-
-
-
-
-
-
-
-
-
-
 # no need
 @login_required
 @permission_required("main.view_department", raise_exception=True)
@@ -162,11 +127,6 @@ def department_test(request):
     return render(request, "departments/test.html", {
         "title": "test"
     })
-
-
-
-
-
 
 
 @login_required
@@ -182,9 +142,7 @@ def employees_data():
         "employee_id", "first_name", "last_name", "department_id"
     ))
 
-
 @login_required
-@permission_required("main.view_attendance", raise_exception=True)
 def attendance(request):
     today=timezone.localdate().isoformat()
     start = request.GET.get("start", today)
@@ -228,8 +186,6 @@ def attendance(request):
         "total_ot_hours": total_ot_hours,
     })
 
-
-
 def _back(request):
     """Return to the page the user came from (keeps filters and page)."""
     nxt = request.POST.get("next", "")
@@ -237,6 +193,8 @@ def _back(request):
         return redirect(nxt)
     return redirect("attendance")
 
+@login_required
+@permission_required("main.add_attendance", raise_exception=True)
 def attendance_add(request):
     form = AttendanceForm(request.POST)
     if not form.is_valid():
@@ -255,6 +213,8 @@ def attendance_add(request):
         messages.success(request, "Attendance added.")
     return _back(request)
 
+@login_required
+@permission_required("main.change_attendance", raise_exception=True)
 def attendance_edit(request, pk):
     obj  = get_object_or_404(Attendance, pk=pk)
     form = AttendanceEditForm(request.POST, instance=obj)
@@ -266,63 +226,49 @@ def attendance_edit(request, pk):
     return _back(request)
 
 @login_required
-@permission_required("main.view_attendance", raise_exception=True)
 def attendance_record(request):
     today = date.today()
-
     month = int(request.GET.get("month", today.month))
     year = int(request.GET.get("year", today.year))
-
     days_in_month = monthrange(year, month)[1]
-
     month_start = date(year, month, 1)
     month_end = date(year, month, days_in_month)
-
     employees = Employee.objects.filter(
         hire_date__lte=month_end
     ).filter(
         Q(inactive_date__isnull=True) |
         Q(inactive_date__gte=month_start)
     ).order_by("employee_id")
-
     attendance = Attendance.objects.filter(
         date__year=year,
         date__month=month,
     )
-
     attendance_map = {
         (item.employee_id, item.date.day): item.status
         for item in attendance
     }
-
     status_short = {
         "Present": "P",
         "Absent": "A",
         "Leave": "L",
     }
-
     attendance_rows = []
-
     for employee in employees:
         days = []
         present = 0
         absent = 0
         leave = 0
-
         for day in range(1, days_in_month + 1):
             status = attendance_map.get(
                 (employee.employee_id, day)
             )
-
             days.append(status_short.get(status, "-"))
-
             if status == "Present":
                 present += 1
             elif status == "Absent":
                 absent += 1
             elif status == "Leave":
                 leave += 1
-
         attendance_rows.append({
             "employee": employee,
             "days": days,
@@ -330,7 +276,6 @@ def attendance_record(request):
             "absent": absent,
             "leave": leave,
         })
-
     return render(request, "attendance/record.html", {
         "title": "Attendance Record",
         "attendance_rows": attendance_rows,
@@ -341,37 +286,24 @@ def attendance_record(request):
 
 
 
-
-
-
-
-
-
-
 @login_required
-@permission_required("main.view_payroll", raise_exception=True)
 def payroll(request):
     today = date.today()
-
     months = list(enumerate(calendar.month_name))[1:]
     month = int(request.GET.get("month", today.month))
     year = int(request.GET.get("year", today.year))
     search = request.GET.get("search", "").strip()
-
     payrolls = Payroll.objects.select_related("employee").filter(
         pay_period__year=year,
         pay_period__month=month,
     )
-
     if search:
         payrolls = payrolls.filter(
             Q(employee__employee_id__icontains=search)
             | Q(employee__first_name__icontains=search)
             | Q(employee__last_name__icontains=search)
         )
-
     payrolls = payrolls.order_by("employee__employee_id")
-
     return render(request, "payroll/payroll.html", {
         "title": "Payroll",
         "payrolls": payrolls,
@@ -381,12 +313,6 @@ def payroll(request):
         "search": search,
     })
 
-
-
-
-
-from django.http import JsonResponse
-from decimal import Decimal
 
 
 @login_required
@@ -582,15 +508,11 @@ def delete_payroll(request, payroll_id):
 
 
 @login_required
-@permission_required("main.view_payroll", raise_exception=True)
 def api_payroll_calc(request):
-    """AJAX helper to calculate OT hours, OT amount and basic salary for chosen employee & month."""
     emp_id = request.GET.get("employee_id")
-    period_str = request.GET.get("pay_period")  # format: YYYY-MM
-
+    period_str = request.GET.get("pay_period")
     if not emp_id or not period_str:
         return JsonResponse({"error": "Missing parameters"}, status=400)
-
     try:
         parts = period_str.split("-")
         y, m = int(parts[0]), int(parts[1])
@@ -619,9 +541,7 @@ def _safe_next(request):
 
 
 @login_required
-@permission_required("main.view_payment", raise_exception=True)
 def payments_test(request):
-    # if false back toc current month 
     today=date.today()
     try:
         selected_month = int(request.GET.get("month", today.month))
@@ -629,17 +549,14 @@ def payments_test(request):
             raise ValueError
     except ValueError:
         selected_month=today.month
-
-    # Year selected from 2000 to 
     
     try:
         selected_year = int( request.GET.get("year", today.year))
     except ValueError:
         selected_year= today.year
         
-    # year and month select options
     months = [(i, calendar.month_name[i]) for i in range(1,13)]
-    years = range(today.year - 5, today.year +5) # 5 year back
+    years = range(today.year - 5, today.year +5)
 
     month_qs=Payment.objects.select_related("payroll__employee").filter(payroll__pay_period__year=selected_year,
                 payroll__pay_period__month=selected_month)
@@ -648,8 +565,6 @@ def payments_test(request):
         qs=month_qs.filter(status=status) if status else month_qs
         return qs.aggregate(t=Sum("amount"))["t"] or 0
 
-
-    #Search _ status filter for table
     status = request.GET.get("status", "")
     q=request.GET.get("q", "").strip()
     qs = month_qs
@@ -664,12 +579,9 @@ def payments_test(request):
     qs = qs.order_by("-payroll__pay_period", "-pk")
  
     page = Paginator(qs, 5).get_page(request.GET.get("page"))
-
-    # Query string without "page", so Previous/Next keep month, status and search
     params = request.GET.copy()
     params.pop("page", None)
 
-    # Approved payrolls of this month that have no payment yet (for "+ Add Payment")
     available_payrolls = Payroll.objects.select_related("employee").filter(
         pay_period__year=selected_year,
         pay_period__month=selected_month,
@@ -678,8 +590,6 @@ def payments_test(request):
     )
 
     methods = [c[0] for c in Payment.MethodChoices.choices]
-
-    # page = Paginator(qs, 5).get_page(request.GET.get("page"))
 
     return render(request, "payments/payment.html", {
         "title": "Payment",
@@ -700,29 +610,20 @@ def payments_test(request):
 
 
 @login_required
-@permission_required("main.view_payment", raise_exception=True)
 def payment_details(request):
-# if false back toc current month 
     today=date.today()
     try:
         selected_month = int(request.GET.get("month", today.month))
         if not 1 <= selected_month <=12:
             raise ValueError
     except ValueError:
-        selected_month=today.month
-
-    # Year selected from 2000 to 
-    
+        selected_month=today.month    
     try:
         selected_year = int( request.GET.get("year", today.year))
     except ValueError:
         selected_year= today.year
-        
-    # year and month select options
     months = [(i, calendar.month_name[i]) for i in range(1,13)]
-    years = range(today.year - 5, today.year +5) # 5 year back
-
-   
+    years = range(today.year - 5, today.year +5)
     payments = Payment.objects.select_related(
         "payroll__employee__department", "payroll__employee__position"
     ).filter(
@@ -786,7 +687,6 @@ def payment_complete(request,pk):
 
 
 @login_required
-@permission_required("main.view_payslip", raise_exception=True)
 def payslips_test(request):
     return render(request, "payslips/test.html", {
         "title": "test"
@@ -811,40 +711,8 @@ def settings(request):
 
 
 
-#test
-#this require login and permission to view the test page
-@login_required
-@permission_required("main.view_employee", raise_exception=True)
-def test(request):
-    employees = Employee.objects.all()
-
-    return render(request, "test.html", {
-        "employees": employees
-    })
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 #anna tasks
-# ==========================================
-# 1. EMPLOYEES VIEW
-# ==========================================
 @login_required
 def employee_list(request):
     if request.method == "POST":
@@ -915,8 +783,7 @@ def employee_list(request):
         "active_count": employees.filter(status=Employee.StatusChoices.ACTIVE).count(),
         "inactive_count": employees.filter(status=Employee.StatusChoices.INACTIVE).count(),
     }
-    return render(request, "employees/test.html", context)
-
+    return render(request, "employees/list.html", context)
 
 # ==========================================
 # 2. DEPARTMENTS VIEW
@@ -1094,13 +961,12 @@ def teammate_placeholder(request):
     )
 def employee_create(request):
     if request.method == "POST":
-        # Check if form.save() or Employee.objects.create(...) is called
         form = EmployeeForm(request.POST, request.FILES)
         if form.is_valid():
             form.save()
-            return redirect("employee_test")
+            return redirect("employee_list")
         else:
-            print("Form errors:", form.errors)  # This will print in terminal if validation fails
+            print("Form errors:", form.errors)
     else:
         form = EmployeeForm()
     return render(request, "employees/create.html", {"form": form})
