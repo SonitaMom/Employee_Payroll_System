@@ -7,13 +7,78 @@
 {% endblock %}
 
 {% block content %}
+<div>
+  <p>Saturday, 17 October 2026</p>
 <div class="d-flex align-items-center justify-content-between attendance-head mx-3">
   <div>
-    <h1 class="m-0">Attendance</h1>
-    <p class="mt-2">Staff attendance.</p>
+    <h1 class="m-0">Employee Attendance</h1>
   </div>
-  <button type="button" class="btn btn-primary" id="btnAdd">+ Add Attendance</button>
+  <!-- <button type="button" class="btn btn-primary" id="btnAdd">+ Add Attendance</button>
+    -->
+  <div>
+    <div>
+      <a href="" class="sq" arai-label="Previous day"><</a>
+      <form action="" method="get">
+        <input type="date" name="date" value="{{day|date:'Y-m-d'}}" onchange="this.form.submit()" aria-label="Choose date">
+      </form>
+      <a href="" class="sq" aria-label="Next day">></a>
+    </div>
+  </div>
 </div>
+</div>
+
+
+<!-- Attendance summary  -->
+ <div class="attSummaries row g-3 g-xl-4 mt-4 mx-3 mb-3">
+  <div class="col-6 col-xl-3">
+    <div class="attSummary present">
+      <div class="d-block">
+        <div class="d-flex gap-2 align-items-center justify-content-center">
+          <span class="present-green"></span>
+          <span class="text-muted">Present</span>
+        </div>
+        
+        <strong class="number">{{total_present}}</strong>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-xl-3">
+    <div class="attSummary absent">
+      <div class="d-block">
+        <div class="d-flex gap-2 align-items-center justify-content-center">
+          <span class="absent-red"></span>
+          <span class="text-muted">Absent</span>
+        </div>
+        
+        <strong class="number">{{ total_absent }}</strong>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-xl-3">
+    <div class="attSummary on-leave">
+      <div class="d-block">
+        <div class="d-flex align-items-center justify-content-center gap-2">
+          <span class="on-leave-purple"></span>
+          <span class="text-muted">On leave</span>
+        </div>
+        
+        <strong class="number">{{total_leave}}</strong>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-xl-3">
+    <div class="attSummary over-time">
+      <div class="d-block">
+        <div class="d-flex justify-content-center align-items-center gap-2">
+          <span class="over-time-orange"></span>
+          <span class="text-muted">Overtime</span>
+        </div>
+        
+        <strong class="number">{{total_ot_hours}}</strong>
+      </div>
+    </div>
+  </div>
+ </div>
 
 {% if messages %}
 {% for m in messages %}
@@ -22,9 +87,15 @@
 {% endif %}
 
 <div class="attendance-table my-3 p-3">
+  <div>
+    <h3>Check-in log</h3>
+  </div>
   <form method="get" class="row g-3 mb-3">
-    <div class="col-3"><input type="date" name="start" value="{{ start }}" class="form-control" /></div>
-    <div class="col-3"><input type="date" name="end" value="{{ end }}" class="form-control" /></div>
+    <!-- <div class="col-3"><input type="date" name="start" value="{{ start }}" class="form-control" /></div>
+    <div class="col-3"><input type="date" name="end" value="{{ end }}" class="form-control" /></div> -->
+    <div class="col-3">
+      <input type="search" name="" value="" placeholder="Search employee name..." aria-label="Search employee" class="search">
+    </div>
     <div class="col-2">
       <select name="dept" class="form-select">
         <option value="">All Departments</option>
@@ -46,12 +117,12 @@
 
   <div class="table-responsive mt-3">
     <table class="table align-middle mb-0">
-      <thead class="table-secondary ">
-        <tr class="text-center">
-          <th>#</th>
-          <th>Date</th>
-          <th>Employee's name</th>
-          <th>Department</th>
+      <thead class="table-light ">
+        <tr class="text-center text-muted text-uppercase">
+          <th>No.</th>
+          <!-- <th>Date</th> -->
+          <th class="text-start ps-5">Employee's name</th>
+          <!-- <th>Department</th> -->
           <th>Check-in</th>
           <th>Check-out</th>
           <th>OT (hrs)</th>
@@ -63,12 +134,21 @@
         {% for a in page %}
         <tr class="text-center">
           <td>{{ a.row_no }}</td>
-          <td>{{ a.date|date:"d/m/Y" }}</td>
-          <td>{{ a.employee.full_name }}</td>
-          <td>{{ a.employee.department }}</td>
+          <!-- <td>{{ a.date|date:"d/m/Y" }}</td> -->
+          <!-- <td>{{ a.employee.full_name }}</td> -->
+          <td class="text-start ps-5">
+            <div class="who d-flex justify-content-start gap-3 align-items-center">
+              <span class="avatar avatar-{{ a.employee.sex|lower }}"> {{a.employee.first_name|slice:"1"|upper}}{{a.employee.last_name|slice:"1"|upper}}</span>
+              <div class="d-block">
+                <p class="m-0">{{a.employee.full_name}}</p>
+                <p class="text-muted m-0">{{a.employee.department}}</p>
+              </div>
+            </div>
+          </td>
+          <!-- <td>{{ a.employee.department }}</td> -->
           <td>{{ a.check_in|time:"H:i"|default:"-" }}</td>
           <td>{{ a.check_out|time:"H:i"|default:"-" }}</td>
-          <td>{{ a.ot_hours }}</td>
+          <td>{{ a.ot_hours }}h</td>
           <td><span class="badge text-bg-{{ a.badge }}">{{ a.status }}</span></td>
           <td>
             <button type="button" class="btn btn-sm btn-outline-primary" data-edit

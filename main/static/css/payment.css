@@ -1,0 +1,319 @@
+.payment-head h1 {
+  font-family: var(--font-family);
+  font-size: 2rem;
+}
+
+.pay-stat {
+  background-color: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  padding: 20px 22px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow:
+    0 1px 3px rgba(0, 0, 0, 0.04),
+    0 1px 2px rgba(0, 0, 0, 0.02);
+  height: 100%;
+}
+.pay-stat:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    0 10px 20px -8px rgba(15, 23, 42, 0.08),
+    0 4px 6px -2px rgba(15, 23, 42, 0.03);
+  border-color: #cbd5e1;
+}
+
+
+
+.pay-stat-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.35rem;
+  flex-shrink: 0;
+  transition: transform 0.2s ease;
+}
+
+.pay-stat:hover .pay-stat-icon {
+  transform: scale(1.05);
+}
+
+.pay-wallet {
+  background-color: #e8f9f1;
+  color: #10b981;
+}
+
+.pay-pending {
+  background-color: #f1edfe;
+  color: #8b5cf6;
+}
+
+.pay-paid {
+  background-color: #fef3eb;
+  color: #f59e0b;
+}
+
+.month-select {
+  padding: 0.4rem 1rem;
+  font-size: 1rem;
+  border: 1px solid #e5e7eb;
+  border-radius: var(--border-radius-sm);
+  background-color: #ffffff;
+  cursor: pointer;
+}
+
+.payment-table {
+  background: #ffffff;
+  border-radius: var(--border-radius-sm);
+  height: 80%;
+}
+
+.search {
+  border-radius: var(--border-radius-sm);
+  border: 1px solid var(--muted-text);
+}
+
+.chips a {
+  border-radius: var(--border-radius-sm);
+  background-color: #ffffff;
+  padding: 0.3rem 0.6rem;
+  border: 1px solid var(--muted-text);
+}
+
+.chip:hover{
+  background-color: #6C757D;
+  color: #ffffff;
+  transition: all 0.15s ease-in;
+}
+.chip.on {
+  background: var(--dark-navy);
+  color: #ffffff;
+}
+.bar input {
+  width: 400px;
+}
+
+.table-head th {
+  color: var(--muted-text);
+  font-size: 1rem;
+}
+
+.payment-info td {
+  font-size: 1rem;
+}
+
+/* Avatar */
+.avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 0.9rem;
+  font-weight: 700;
+  flex-shrink: 0;
+
+  background-color: #e4e4e4;
+  color: #4a5570;
+}
+
+/* Female: red */
+.avatar-female,
+.avatar-f {
+  background: #fde5e8;
+  color: #c62839;
+}
+
+/* Male: dark-nay */
+.avatar-male,
+.avatar-m {
+  background: #dbe8ff;
+  color: #1747b8;
+}
+
+/* Payment status */
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0.3rem 0.8rem;
+  border-radius: 99px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.status-pending {
+  background: #fff1d6;
+  color: #a86400;
+} /* amber */
+.status-completed {
+  background: #e2f6ea;
+  color: #128a4b;
+} /* green */
+.status-failed {
+  background: #fde5e2;
+  color: #c0392b;
+} /* red */
+
+
+
+
+/* ====================Payment Detail============== */
+/* Page heading */
+.payment-head h1 {
+  font-size: 2rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+/* Month dropdown */
+.month-select {
+  padding: 0.5rem 0.9rem;
+  font-size: 1rem;
+  border: 1px solid #e4e8f0;
+  border-radius: 8px;
+  background: #fff;
+  cursor: pointer;
+}
+.detail-select {
+  min-width: 260px;
+}
+
+/* White cards */
+.detail-panel {
+  background: #fff;
+  border: 1px solid #e4e8f0;
+  border-radius: 12px;
+}
+
+/* Empty state */
+.detail-empty {
+  text-align: center;
+  padding: 2.5rem 1rem;
+  color: #6b7690;
+}
+.detail-empty i {
+  font-size: 2.2rem;
+  display: block;
+  margin-bottom: 0.5rem;
+}
+
+/* Header of the selected employee */
+.detail-head {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding-bottom: 1rem;
+  margin-bottom: 1.25rem;
+  border-bottom: 1px solid #e4e8f0;
+}
+.detail-name {
+  font-size: 1.3rem;
+  font-weight: 700;
+}
+.detail-sub {
+  color: #6b7690;
+  font-size: 0.9rem;
+}
+
+/* Avatars - colour by gender */
+.avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 0.8rem;
+  font-weight: 700;
+  flex-shrink: 0;
+  background: #e4e8f0; /* unknown gender */
+  color: #4a5570;
+}
+.avatar-female,
+.avatar-f {
+  background: #fde5e8;
+  color: #c62839;
+}
+.avatar-male,
+.avatar-m {
+  background: #dbe8ff;
+  color: #1747b8;
+}
+.avatar-lg {
+  width: 56px;
+  height: 56px;
+  font-size: 1.15rem;
+}
+
+/* Status pill */
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0.3rem 0.8rem;
+  border-radius: 99px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.status-pending {
+  background: #fff1d6;
+  color: #a86400;
+}
+.status-completed {
+  background: #e2f6ea;
+  color: #128a4b;
+}
+.status-failed {
+  background: #fde5e2;
+  color: #c0392b;
+}
+
+/* Three info cards */
+.detail-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 14px;
+}
+.detail-card {
+  border: 1px solid #e4e8f0;
+  border-radius: 12px;
+  padding: 14px 16px;
+  background: #fafbfe;
+}
+.detail-card h6 {
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #6b7690;
+  margin-bottom: 0.6rem;
+}
+.detail-card dl {
+  margin: 0;
+}
+.dl-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 0.45rem 0;
+  border-top: 1px solid #eef1f6;
+  font-size: 0.92rem;
+}
+.dl-row:first-child {
+  border-top: 0;
+}
+.dl-row dt {
+  font-weight: 500;
+  color: #6b7690;
+}
+.dl-row dd {
+  margin: 0;
+  text-align: right;
+  word-break: break-word;
+}

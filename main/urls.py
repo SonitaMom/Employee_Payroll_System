@@ -9,20 +9,23 @@ urlpatterns = [
     path("dashboard/", views.dashboard, name="dashboard"),
 
 
-    path("employees/test/", views.employee_test, name="employee_test"),
+    # path("employees/test/", views.employee_test, name="employee_test"),
+
+    path("employees/", views.employee_list, name="employee_list"),
+    path("employees/test/", views.employee_list, name="employee_test"),
+
+    # path("departments/test/", views.department_test, name="department_test"),
 
 
-
-    path("departments/test/", views.department_test, name="department_test"),
-
-
-    path("positions/test/", views.position_test, name="position_test"),
+    # path("positions/test/", views.position_test, name="position_test"),
 
     path("attendance/", views.attendance, name="attendance"),
     path("attendance/record/", views.attendance_record, name="attendance_record"),
     path("attendance/add/", views.attendance_add, name="attendance_add"),
     path("attendance/<int:pk>/edit/", views.attendance_edit, name="attendance_edit"),
-
+    path("attendance/test/", views.attendance_edit, name="attendance_test"),
+    path("attendance/", views.attendance, name="attendance"),
+    path("attendance/test/", views.attendance_edit, name="attendance_test"),
     path("payroll/", views.payroll, name="payroll"),
     path("payroll/new-payroll", views.new_payroll, name="new_payroll"),
     path("payroll/update/<int:payroll_id>/", views.update_payroll, name="update_payroll"),
@@ -30,13 +33,16 @@ urlpatterns = [
     path("payroll/api/calc/", views.api_payroll_calc, name="api_payroll_calc"),
 
 
-    path("payments/test/", views.payments_test, name="payments_test"),
+    path("payments/payment/", views.payments_test, name="payments"),
+    path("payments/<int:pk>/complete/", views.payment_complete, name="payment_complete"),
+    path("payments/paymentDetail/", views.payment_details, name="payment_details"),
+    path("payments/payment/details/", views.payment_details, name="payment_details"),
+
+    # path("payslips/test/", views.payslips_test, name="payslips_test"),
 
 
-    path("payslips/test/", views.payslips_test, name="payslips_test"),
+    # path("reports/", views.report_dashboard, name="reports_dashboard"),
 
-
-    path("reports/", views.reports, name="reports"),
 
 
     path("settings/", views.settings, name="settings"),
@@ -44,4 +50,23 @@ urlpatterns = [
 
     #test
     path("test/", views.test, name="test"),
+
+
+    # Anna's 5 modules (sidebar A)
+    # The "/test/" addresses are kept, but now they open the REAL pages with data
+    # (before, they opened the empty placeholder views, so no data was loaded).
+    path("employees/", views.employee_list, name="employee_list"),
+    path("employees/test/", views.employee_list, name="employee_test"),
+
+    path("departments/", views.department_list, name="department_list"),
+    path("departments/test/", views.department_list, name="department_test"),
+
+    path("positions/", views.position_list, name="position_list"),
+    path("positions/test/", views.position_list, name="position_test"),
+
+    path("payslips/", views.payslip_list, name="payslip_list"),
+    path("payslips/test/", views.payslip_list, name="payslips_test"),
+
+    path("reports/", views.report_dashboard, name="reports"),
+    path("reports/dashboard/", views.report_dashboard, name="reports_dashboard"),
 ]

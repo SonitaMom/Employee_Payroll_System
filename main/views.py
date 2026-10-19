@@ -5,11 +5,17 @@ from .models import *
 from django.db.models import Sum, Count, Q
 from django.db.models.functions import TruncMonth
 from django.utils import timezone
-
+from decimal import Decimal 
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth.decorators import login_required, permission_required
+from django.contrib import messages
+from django.db.models import Sum, Count, Q
+from django.http import JsonResponse
+from .models import Employee, Department, Position, Payroll, Payment
 from datetime import date
 from calendar import monthrange
 import calendar
-
+from django.http import HttpResponse
 from main.services.dashboard import get_recent_activities
 
 from .forms import AttendanceForm, AttendanceEditForm, PayrollForm, PayrollItemFormSet
@@ -20,6 +26,7 @@ from django.contrib import messages
 
 from django.db import transaction
 from .services.payroll import calculate_payroll
+from django.shortcuts import render
 
 
 def home(request):
@@ -184,6 +191,7 @@ def attendance(request):
     dept = request.GET.get("dept", "")
     status = request.GET.get("status", "")
     dept_id = int(dept) if dept.isdigit() else None
+    now = timezone.now()
 
     qs = (Attendance.objects.select_related("employee__department")
           .filter(date__range=[start, end]))
@@ -200,6 +208,11 @@ def attendance(request):
     for i, a in enumerate(page):
         a.row_no =total-offset-i
 
+    total_absent = Attendance.objects.filter(date=now.date(), status=Attendance.StatusChoices.ABSENT).count()
+    total_present = Attendance.objects.filter(date=now.date(), status=Attendance.StatusChoices.PRESENT).count()
+    total_leave = Attendance.objects.filter(date=now.date(), status=Attendance.StatusChoices.LEAVE).count()
+    total_ot_hours = Attendance.objects.filter(date=now.date()).aggregate(Sum('ot_hours'))['ot_hours__sum'] or 0
+
     return render(request, "attendance/attendance.html", {
         "title": "Attendance",
         "page" : page,
@@ -208,6 +221,10 @@ def attendance(request):
         "statuses": Attendance.StatusChoices.choices,
         "start": start, "end":end, "dept":dept, "status":status,
         "employees": employees_data(),
+        "total_absent": total_absent,
+        "total_present": total_present,
+        "total_leave":total_leave,
+        "total_ot_hours": total_ot_hours,
     })
 
 
@@ -412,6 +429,14 @@ def new_payroll(request):
                 formset.instance = payroll
                 formset.save()
 
+
+                #Create the pending payment when approved
+                if payroll.status == Payroll.StatusChoices.APPROVED:
+                    Payment.objects.get_or_create(
+                        payroll=payroll,
+                        defaults={"amount": payroll.net_salary},
+                    )
+
             if is_approve:
                 messages.success(request, f"Payroll for {payroll.employee.full_name} created and approved.")
             else:
@@ -496,6 +521,13 @@ def update_payroll(request, payroll_id):
                 payroll.save()
                 formset.save()
 
+                #create the pending payment when approved
+                if payroll.status == Payroll.StatusChoices.APPROVED:
+                    Payment.objects.get_or_create(
+                        payroll = payroll,
+                        defaults={"amount":payroll.net_salary}
+                    )
+
             if is_approve:
                 messages.success(request, f"Payroll for {payroll.employee.full_name} updated and approved.")
             else:
@@ -573,6 +605,13 @@ def api_payroll_calc(request):
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=400)
 
+def _safe_next(request):
+    """Redirect to the posted `next` URL if it is safe, else to the payments page."""
+    nxt = request.POST.get("next", "")
+    if nxt and url_has_allowed_host_and_scheme(nxt, allowed_hosts={request.get_host()}):
+        return redirect(nxt)
+    return redirect("payments_test")
+
 
 
 
@@ -581,9 +620,168 @@ def api_payroll_calc(request):
 @login_required
 @permission_required("main.view_payment", raise_exception=True)
 def payments_test(request):
-    return render(request, "payments/test.html", {
-        "title": "test"
+    # if false back toc current month 
+    today=date.today()
+    try:
+        selected_month = int(request.GET.get("month", today.month))
+        if not 1 <= selected_month <=12:
+            raise ValueError
+    except ValueError:
+        selected_month=today.month
+
+    # Year selected from 2000 to 
+    
+    try:
+        selected_year = int( request.GET.get("year", today.year))
+    except ValueError:
+        selected_year= today.year
+        
+    # year and month select options
+    months = [(i, calendar.month_name[i]) for i in range(1,13)]
+    years = range(today.year - 5, today.year +5) # 5 year back
+
+    month_qs=Payment.objects.select_related("payroll__employee").filter(payroll__pay_period__year=selected_year,
+                payroll__pay_period__month=selected_month)
+
+    def total(status=None):
+        qs=month_qs.filter(status=status) if status else month_qs
+        return qs.aggregate(t=Sum("amount"))["t"] or 0
+
+
+    #Search _ status filter for table
+    status = request.GET.get("status", "")
+    q=request.GET.get("q", "").strip()
+    qs = month_qs
+    if status:
+        qs=qs.filter(status__iexact=status)
+    if q:
+        qs = qs.filter(
+            Q(payroll__employee__first_name__icontains=q)
+            | Q(payroll__employee__last_name__icontains=q)
+        )
+
+    qs = qs.order_by("-payroll__pay_period", "-pk")
+ 
+    page = Paginator(qs, 5).get_page(request.GET.get("page"))
+
+    # Query string without "page", so Previous/Next keep month, status and search
+    params = request.GET.copy()
+    params.pop("page", None)
+
+    # Approved payrolls of this month that have no payment yet (for "+ Add Payment")
+    available_payrolls = Payroll.objects.select_related("employee").filter(
+        pay_period__year=selected_year,
+        pay_period__month=selected_month,
+        status=Payroll.StatusChoices.APPROVED,
+        payment__isnull=True,
+    )
+
+    methods = [c[0] for c in Payment.MethodChoices.choices]
+
+    # page = Paginator(qs, 5).get_page(request.GET.get("page"))
+
+    return render(request, "payments/payment.html", {
+        "title": "Payment",
+        "selected_year": selected_year,
+        "selected_month": selected_month,
+        "months": months,
+        "years": years,
+        "page": page,
+        "status": status,
+        "q": q,
+        "keep": params.urlencode(),
+        "total": total(),
+        "pending": total(Payment.StatusChoices.PENDING),
+        "paid": total(Payment.StatusChoices.COMPLETED),
+        "available_payrolls": available_payrolls,
+        "methods": methods,
     })
+
+
+@login_required
+@permission_required("main.view_payment", raise_exception=True)
+def payment_details(request):
+# if false back toc current month 
+    today=date.today()
+    try:
+        selected_month = int(request.GET.get("month", today.month))
+        if not 1 <= selected_month <=12:
+            raise ValueError
+    except ValueError:
+        selected_month=today.month
+
+    # Year selected from 2000 to 
+    
+    try:
+        selected_year = int( request.GET.get("year", today.year))
+    except ValueError:
+        selected_year= today.year
+        
+    # year and month select options
+    months = [(i, calendar.month_name[i]) for i in range(1,13)]
+    years = range(today.year - 5, today.year +5) # 5 year back
+
+   
+    payments = Payment.objects.select_related(
+        "payroll__employee__department", "payroll__employee__position"
+    ).filter(
+        payroll__pay_period__year=selected_year,
+        payroll__pay_period__month=selected_month,
+    ).order_by("payroll__employee__first_name", "payroll__employee__last_name")
+ 
+    payment = None
+    pid = request.GET.get("payment", "")
+    if pid.isdigit():
+        payment = payments.filter(pk=pid).first()
+ 
+    return render(request, "payments/paymentDetail.html", {
+        "title": "Payment Details",
+        "months": months,
+        "selected_year": selected_year,
+        "years": years,
+        "selected_month": selected_month,
+        "payments": payments,
+        "payment": payment,
+    })
+ 
+
+@login_required
+@permission_required("main.change_payment", raise_exception=True)
+@require_POST
+def payment_complete(request,pk):
+    payment = get_object_or_404(
+        Payment.objects.select_related("payroll__employee"),pk=pk
+    )
+    # back=request.POST.get("next") or "payments"
+    method = request.POST.get("payment_method")
+    if payment.status == Payment.StatusChoices.COMPLETED:
+        messages.info(request, "This payment is already completed.")
+        return _safe_next(request)
+
+    if payment.payroll.status == Payroll.StatusChoices.DRAFT:
+        messages.error(request, "Approve the payroll before completing the payment.")
+        return _safe_next(request)
+
+
+       
+    if method in Payment.MethodChoices.values:
+        payment.payment_method = method
+
+    if not payment.payment_method:
+        messages.error(request, "Choose a payment method first.")
+        return _safe_next(request)
+
+    with transaction.atomic():
+        payment.status = Payment.StatusChoices.COMPLETED
+        payment.payment_date = timezone.localdate()
+        payment.save()
+
+        payroll = payment.payroll
+        payroll.status = Payroll.StatusChoices.PAID
+        payroll.save()
+
+    messages.success(request, f"Payment for {payroll.employee.full_name} completed.")
+    return _safe_next(request)
 
 
 @login_required
@@ -624,3 +822,284 @@ def test(request):
     })
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#anna tasks
+# ==========================================
+# 1. EMPLOYEES VIEW
+# ==========================================
+@login_required
+def employee_list(request):
+    if request.method == "POST":
+        action = request.POST.get("action", "create")
+        
+        if action == "create":
+            first_name = request.POST.get("first_name", "").strip()
+            last_name = request.POST.get("last_name", "").strip()
+            department_id = request.POST.get("department")
+            position_id = request.POST.get("position")
+            hire_date = request.POST.get("hire_date")
+            sex = request.POST.get("sex")
+            phone = request.POST.get("phone", "").strip()
+            email = request.POST.get("email", "").strip()
+            address = request.POST.get("address", "").strip()
+            status = request.POST.get("status", "Active")
+
+            Employee.objects.create(
+                first_name=first_name,
+                last_name=last_name,
+                department_id=department_id,
+                position_id=position_id,
+                hire_date=hire_date,
+                sex=sex,
+                phone=phone,
+                email=email,
+                address=address,
+                status=status
+            )
+            messages.success(request, f"Employee {first_name} {last_name} created successfully!")
+            return redirect("employee_list")
+
+        elif action == "update":
+            emp_id = request.POST.get("employee_id")
+            emp = get_object_or_404(Employee, pk=emp_id)
+            emp.first_name = request.POST.get("first_name", emp.first_name).strip()
+            emp.last_name = request.POST.get("last_name", emp.last_name).strip()
+            emp.department_id = request.POST.get("department", emp.department_id)
+            emp.position_id = request.POST.get("position", emp.position_id)
+            emp.hire_date = request.POST.get("hire_date") or emp.hire_date
+            emp.sex = request.POST.get("sex", emp.sex)
+            emp.phone = request.POST.get("phone", emp.phone)
+            emp.email = request.POST.get("email", emp.email)
+            emp.address = request.POST.get("address", emp.address)
+            emp.status = request.POST.get("status", emp.status)
+            emp.save()
+            messages.success(request, f"Employee {emp.full_name} updated successfully!")
+            return redirect("employee_list")
+
+        elif action == "delete":
+            emp_id = request.POST.get("employee_id")
+            emp = get_object_or_404(Employee, pk=emp_id)
+            emp_name = emp.full_name
+            emp.delete()
+            messages.success(request, f"Employee {emp_name} removed.")
+            return redirect("employee_list")
+
+    employees = Employee.objects.select_related("department", "position").all().order_by("-employee_id")
+    departments = Department.objects.all().order_by("name")
+    positions = Position.objects.all().order_by("name")
+
+    context = {
+        "title": "Employees",
+        "employees": employees,
+        "departments": departments,
+        "positions": positions,
+        "total_count": employees.count(),
+        "active_count": employees.filter(status=Employee.StatusChoices.ACTIVE).count(),
+        "inactive_count": employees.filter(status=Employee.StatusChoices.INACTIVE).count(),
+    }
+    return render(request, "employees/test.html", context)
+
+
+# ==========================================
+# 2. DEPARTMENTS VIEW
+# ==========================================
+@login_required
+def department_list(request):
+    if request.method == "POST":
+        action = request.POST.get("action", "create")
+
+        if action == "create":
+            name = request.POST.get("name", "").strip()
+            description = request.POST.get("description", "").strip()
+            if name:
+                Department.objects.create(name=name, description=description)
+                messages.success(request, f"Department '{name}' added successfully.")
+            return redirect("department_list")
+
+        elif action == "update":
+            dept_id = request.POST.get("department_id")
+            dept = get_object_or_404(Department, pk=dept_id)
+            dept.name = request.POST.get("name", dept.name).strip()
+            dept.description = request.POST.get("description", dept.description).strip()
+            dept.save()
+            messages.success(request, f"Department '{dept.name}' updated.")
+            return redirect("department_list")
+
+        elif action == "delete":
+            dept_id = request.POST.get("department_id")
+            dept = get_object_or_404(Department, pk=dept_id)
+            if dept.employees.exists():
+                messages.error(request, f"Cannot delete '{dept.name}' because it contains assigned employees.")
+            else:
+                dept.delete()
+                messages.success(request, f"Department '{dept.name}' deleted.")
+            return redirect("department_list")
+
+    departments = Department.objects.annotate(employee_count=Count("employees")).order_by("name")
+    context = {
+        "title": "Departments",
+        "departments": departments,
+        "total_departments": departments.count(),
+    }
+    return render(request, "departments/test.html", context)
+
+
+# ==========================================
+# 3. POSITIONS VIEW
+# ==========================================
+@login_required
+def position_list(request):
+    if request.method == "POST":
+        action = request.POST.get("action", "create")
+
+        if action == "create":
+            name = request.POST.get("name", "").strip()
+            basic_salary = request.POST.get("basic_salary") or 0
+            ot_rate = request.POST.get("ot_rate") or 0
+            description = request.POST.get("description", "").strip()
+
+            Position.objects.create(
+                name=name,
+                basic_salary=basic_salary,
+                ot_rate=ot_rate,
+                description=description
+            )
+            messages.success(request, f"Position '{name}' registered successfully.")
+            return redirect("position_list")
+
+        elif action == "update":
+            pos_id = request.POST.get("position_id")
+            pos = get_object_or_404(Position, pk=pos_id)
+            pos.name = request.POST.get("name", pos.name).strip()
+            pos.basic_salary = request.POST.get("basic_salary") or pos.basic_salary
+            pos.ot_rate = request.POST.get("ot_rate") or pos.ot_rate
+            pos.description = request.POST.get("description", pos.description).strip()
+            pos.save()
+            messages.success(request, f"Position '{pos.name}' updated successfully.")
+            return redirect("position_list")
+
+        elif action == "delete":
+            pos_id = request.POST.get("position_id")
+            pos = get_object_or_404(Position, pk=pos_id)
+            if pos.employees.exists():
+                messages.error(request, f"Cannot delete '{pos.name}' because active staff hold this position.")
+            else:
+                pos.delete()
+                messages.success(request, f"Position '{pos.name}' deleted.")
+            return redirect("position_list")
+
+    positions = Position.objects.annotate(employee_count=Count("employees")).order_by("-basic_salary")
+    context = {
+        "title": "Positions",
+        "positions": positions,
+        "total_positions": positions.count(),
+    }
+    return render(request, "positions/test.html", context)
+
+
+# ==========================================
+# 4. PAYSLIPS VIEW
+# ==========================================
+@login_required
+def payslip_list(request):
+    payrolls = Payroll.objects.select_related(
+        "employee", "employee__department", "employee__position", "payment"
+    ).prefetch_related("items").all().order_by("-pay_period", "-payroll_id")
+
+    paid_sum = payrolls.filter(status=Payroll.StatusChoices.PAID).aggregate(Sum("net_salary"))["net_salary__sum"] or 0
+    pending_sum = payrolls.filter(status=Payroll.StatusChoices.APPROVED).aggregate(Sum("net_salary"))["net_salary__sum"] or 0
+
+    context = {
+        "title": "Payslips",
+        "payrolls": payrolls,
+        "total_count": payrolls.count(),
+        "paid_sum": paid_sum,
+        "pending_sum": pending_sum,
+    }
+    return render(request, "payslips/test.html", context)
+
+
+# ==========================================
+# 5. REPORTS DASHBOARD VIEW
+# ==========================================
+@login_required
+def report_dashboard(request):
+    total_employees = Employee.objects.count()
+    active_employees = Employee.objects.filter(status=Employee.StatusChoices.ACTIVE).count()
+    inactive_employees = Employee.objects.filter(status=Employee.StatusChoices.INACTIVE).count()
+    
+    total_payroll_exp = Payroll.objects.aggregate(Sum("net_salary"))["net_salary__sum"] or 0.00
+    paid_payroll_exp = Payroll.objects.filter(status=Payroll.StatusChoices.PAID).aggregate(Sum("net_salary"))["net_salary__sum"] or 0.00
+    pending_payroll_exp = Payroll.objects.filter(status=Payroll.StatusChoices.APPROVED).aggregate(Sum("net_salary"))["net_salary__sum"] or 0.00
+
+    # Department breakdown
+    dept_distribution = list(
+        Department.objects.annotate(count=Count("employees"))
+        .values("name", "count")
+    )
+    
+    # Monthly breakdown for the PayPro bar chart
+    monthly_data = (
+        Payroll.objects.values("pay_period")
+        .annotate(total=Sum("net_salary"))
+        .order_by("pay_period")[:6]
+    )
+    month_labels = [m["pay_period"].strftime("%b %Y") for m in monthly_data]
+    month_amounts = [float(m["total"]) for m in monthly_data]
+
+    context = {
+        "title": "Payroll Report",
+        "total_employees": total_employees,
+        "active_employees": active_employees,
+        "inactive_employees": inactive_employees,
+        "total_departments": Department.objects.count(),
+        "total_positions": Position.objects.count(),
+        "total_payroll_exp": total_payroll_exp,
+        "paid_payroll_exp": paid_payroll_exp,
+        "pending_payroll_exp": pending_payroll_exp,
+        "dept_distribution": dept_distribution,
+        "month_labels": month_labels,
+        "month_amounts": month_amounts,
+    }
+    return render(request, "reports.html", context)
+
+
+def teammate_placeholder(request):
+    """Temporary placeholder for modules handled by teammates."""
+    return HttpResponse(
+        "<h3>This module is being developed by another teammate.</h3>"
+        "<p><a href='/employees/'>Go to Employees</a> | "
+        "<a href='/departments/'>Go to Departments</a> | "
+        "<a href='/positions/'>Go to Positions</a> | "
+        "<a href='/payslips/'>Go to Payslips</a> | "
+        "<a href='/reports/'>Go to Reports</a></p>"
+    )
+def employee_create(request):
+    if request.method == "POST":
+        # Check if form.save() or Employee.objects.create(...) is called
+        form = EmployeeForm(request.POST, request.FILES)
+        if form.is_valid():
+            form.save()
+            return redirect("employee_test")
+        else:
+            print("Form errors:", form.errors)  # This will print in terminal if validation fails
+    else:
+        form = EmployeeForm()
+    return render(request, "employees/create.html", {"form": form})
